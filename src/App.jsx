@@ -30,7 +30,7 @@ const STEPS = ["Personal","Employment","Qualifications","Prof. Dev","Review"];
 
 // ALL EXPORT COLUMNS (human-readable label → db key)
 const EXPORT_COLUMNS = [
-  ["Full Name","full_name"],["Gender","gender"],["National ID","national_id"],
+  ["Full Name","full_name"],["Email","email"],["Gender","gender"],["National ID","national_id"],
   ["DOB Day","dob_day"],["DOB Month","dob_month"],["DOB Year","dob_year"],
   ["Disability","disability"],["Disability Nature","disability_nature"],
   ["Job Group","job_group"],["Designation","designation"],["Department","department"],
@@ -149,7 +149,7 @@ textarea { min-height: 80px; resize: vertical; }
 .date-yy { width: 70px; flex-shrink: 0; }
 
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: flex-end; justify-content: center; padding: 0; overflow-y: auto; }
-.modal { background: ${C.white}; border-radius: 16px 16px 0 0; max-width: 700px; width: 100%; margin: 0; padding: 1.25rem; max-height: 90vh; overflow-y: auto; }
+.modal { background: ${C.white}; border-radius: 16px 16px 0 0; max-width: 700px; width: 100%; margin: auto; padding: 1.25rem; max-height: 90vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; gap: 10px; flex-wrap: wrap; }
 .modal-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
@@ -181,6 +181,19 @@ textarea { min-height: 80px; resize: vertical; }
 .rec-field-val { color: ${C.text}; font-weight: 500; word-break: break-word; }
 .rec-card-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
 
+/* Custom Alert Modal */
+.alert-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.alert-modal { background: ${C.white}; border-radius: 16px; max-width: 400px; width: 100%; padding: 1.5rem; text-align: center; animation: fadeIn 0.2s ease; }
+.alert-modal-icon { font-size: 48px; margin-bottom: 1rem; }
+.alert-modal-title { font-family: sans-serif; font-size: 1.2rem; font-weight: 700; color: ${C.warning}; margin-bottom: 0.5rem; }
+.alert-modal-message { font-family: sans-serif; font-size: 0.9rem; color: ${C.text}; margin-bottom: 1rem; line-height: 1.4; }
+.alert-modal-buttons { display: flex; gap: 12px; justify-content: center; }
+.alert-modal-btn { padding: 8px 20px; border-radius: 8px; font-family: sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+.alert-modal-btn-cancel { background: ${C.light}; color: ${C.muted}; }
+.alert-modal-btn-cancel:hover { background: ${C.border}; }
+.alert-modal-btn-confirm { background: ${C.warning}; color: #fff; }
+.alert-modal-btn-confirm:hover { background: ${C.danger}; }
+
 /* Print Styles */
 @media print {
   .no-print { display: none !important; }
@@ -205,8 +218,12 @@ textarea { min-height: 80px; resize: vertical; }
 }
 .print-only { display: none; }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* Responsive Breakpoints */
-/* Small phones (up to 480px) */
 @media (max-width: 480px) {
   .header-logo img { width: 32px; height: 32px; }
   .header-title { font-size: 0.7rem; }
@@ -228,7 +245,6 @@ textarea { min-height: 80px; resize: vertical; }
   .btn-ghost { padding: 5px 10px; font-size: 0.7rem; }
 }
 
-/* Tablets and small phones (481px - 768px) */
 @media (max-width: 768px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .filter-bar { flex-direction: column; align-items: stretch; }
@@ -253,7 +269,6 @@ textarea { min-height: 80px; resize: vertical; }
   .chart-container .recharts-wrapper { font-size: 10px; }
 }
 
-/* Desktop and larger tablets (769px and up) */
 @media (min-width: 769px) {
   .show-cards { display: none; }
   .show-tbl { display: block; }
@@ -261,30 +276,26 @@ textarea { min-height: 80px; resize: vertical; }
   .modal { border-radius: 16px; max-height: 90vh; }
 }
 
-/* Extra large screens (1200px+) */
 @media (min-width: 1200px) {
   .container-wide { max-width: 1600px; }
   .grid-stat { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 }
 
-/* Touch-friendly adjustments */
 @media (hover: none) and (pointer: coarse) {
   .btn, .btn-outline, .btn-accent, .btn-danger, .btn-icon, .stat-card, .step-item {
     cursor: default;
   }
   input, select, textarea, button {
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 16px;
   }
 }
 
-/* Loading spinner */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 .spin { animation: spin 0.75s linear infinite; }
 
-/* Utility classes */
 .text-center { text-align: center; }
 .w-100 { width: 100%; }
 .mt-1 { margin-top: 0.5rem; }
@@ -367,8 +378,8 @@ function PrintRecord({ r }) {
         <div className="print-section-title">Personal Information</div>
         <div className="print-grid">
           {row("Full Name",         r.full_name)}
-          {row("Gender",            r.gender)}
           {row("Email",             r.email)}
+          {row("Gender",            r.gender)}
           {row("National ID No.",   r.national_id)}
           {row("Date of Birth",     fmtDate(r.dob_day,r.dob_month,r.dob_year))}
           {row("Disability",        r.disability)}
@@ -432,12 +443,40 @@ function PrintRecord({ r }) {
   );
 }
 
+// Custom Alert Modal Component
+function CustomAlertModal({ isOpen, onClose, onConfirm, title, message, type = "warning" }) {
+  if (!isOpen) return null;
+
+  const icons = {
+    warning: <FaExclamationTriangle size={48} style={{ color: C.warning }} />,
+    success: <FaRegCheckCircle size={48} style={{ color: C.success }} />,
+    error: <FaExclamationTriangle size={48} style={{ color: C.danger }} />,
+    info: <FaInfoCircle size={48} style={{ color: C.info }} />
+  };
+
+  return (
+    <div className="alert-modal-overlay" onClick={onClose}>
+      <div className="alert-modal" onClick={e => e.stopPropagation()}>
+        <div className="alert-modal-icon">{icons[type] || icons.warning}</div>
+        <div className="alert-modal-title">{title}</div>
+        <div className="alert-modal-message">{message}</div>
+        <div className="alert-modal-buttons">
+          <button className="alert-modal-btn alert-modal-btn-cancel" onClick={onClose}>Cancel</button>
+          {onConfirm && <button className="alert-modal-btn alert-modal-btn-confirm" onClick={onConfirm}>Continue</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DataForm() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(emptyForm());
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const inp = k => ({ value: form[k] || "", onChange: e => set(k, e.target.value) });
   const isPartTime = ["Part Time Lecturer","Intern","Teaching Practice"].includes(form.designation);
@@ -462,7 +501,7 @@ function DataForm() {
   const next = () => { if(validate()) setStep(s=>Math.min(s+1,4)); };
   const back = () => setStep(s=>Math.max(s-1,0));
 
-  const submit = async () => {
+  const checkExistingAndSubmit = async () => {
     setSubmitting(true);
     
     const { data: existing } = await supabase
@@ -472,17 +511,19 @@ function DataForm() {
       .single();
 
     if (existing) {
-      const confirmResubmit = window.confirm(
-        "⚠️ A submission with this National ID already exists.\n\n" +
-        "This will UPDATE your previous submission.\n\n" +
-        "Do you want to continue?"
-      );
-      if (!confirmResubmit) {
-        setSubmitting(false);
-        return;
-      }
+      setPendingSubmission(existing);
+      setShowConfirmModal(true);
+      setSubmitting(false);
+      return;
     }
+    
+    await performSubmit();
+  };
 
+  const performSubmit = async () => {
+    setSubmitting(true);
+    setShowConfirmModal(false);
+    
     const dbRecord = {
       full_name: form.fullName,
       email: form.email,
@@ -538,11 +579,11 @@ function DataForm() {
       tveta_expiry: form.tvetaExpiry,
       tveta_reg_no: form.tvetaRegNo,
       submitted_at: new Date().toISOString(),
-      submitted_count: existing ? (existing.submitted_count || 0) + 1 : 1
+      submitted_count: pendingSubmission ? (pendingSubmission.submitted_count || 0) + 1 : 1
     };
 
     let error;
-    if (existing) {
+    if (pendingSubmission) {
       const { error: updateError } = await supabase
         .from("staff_submissions")
         .update(dbRecord)
@@ -564,12 +605,15 @@ function DataForm() {
     }
 
     setSubmitted(true);
+    setPendingSubmission(null);
   };
 
   if (submitted) return (
     <div className="container">
       <div className="card" style={{textAlign:"center", padding:"2.5rem 1.5rem"}}>
-        <div style={{fontSize:52, marginBottom:"1rem"}}>✅</div>
+        <div style={{fontSize:52, marginBottom:"1rem", color:C.success}}>
+          <FaRegCheckCircle size={52} />
+        </div>
         <h2 style={{fontFamily:"sans-serif", color:C.success, marginBottom:6}}>Submission Received</h2>
         <p style={{fontFamily:"sans-serif", color:C.muted, marginBottom:"1.5rem"}}>
           Thank you, <strong>{form.fullName}</strong>. Your data has been recorded successfully.
@@ -583,6 +627,15 @@ function DataForm() {
 
   return (
     <div className="container">
+      <CustomAlertModal 
+        isOpen={showConfirmModal}
+        onClose={() => { setShowConfirmModal(false); setPendingSubmission(null); }}
+        onConfirm={performSubmit}
+        title="⚠️ Existing Record Found"
+        message={`A submission with National ID "${form.nationalId}" already exists. This will UPDATE your previous submission. Do you want to continue?`}
+        type="warning"
+      />
+      
       <div className="card">
         <div style={{marginBottom:"1.25rem"}}>
           <h1 style={{fontFamily:"sans-serif", fontSize:"1.25rem", color:C.primary, marginBottom:4}}>
@@ -782,7 +835,7 @@ function DataForm() {
           {step>0 ? <button className="btn-outline" onClick={back} disabled={submitting}><FaArrowLeft size={12} /> Back</button> : <span/>}
           {step<4
             ? <button className="btn" onClick={next}>Continue <FaArrowRight size={12} /></button>
-            : <button className="btn-accent" onClick={submit} disabled={submitting}>
+            : <button className="btn-accent" onClick={checkExistingAndSubmit} disabled={submitting}>
                 {submitting ? "Submitting..." : <><FaCheck size={12} /> Submit Form</>}
               </button>
           }
@@ -792,6 +845,7 @@ function DataForm() {
   );
 }
 
+// UPDATED Login component with generic placeholder
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -854,7 +908,7 @@ function Login({ onLogin }) {
           <input 
             value={username} 
             onChange={e=>{setUsername(e.target.value);setError("");}} 
-            placeholder="principal or deputy.principal"
+            placeholder="Enter username"
             disabled={loading}
           />
         </div>
@@ -957,22 +1011,34 @@ function Dashboard({admin,onLogout}) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    let query = supabase.from("staff_submissions").select("*");
-    
-    if (dateRange.start) query = query.gte("submitted_at", dateRange.start);
-    if (dateRange.end) query = query.lte("submitted_at", dateRange.end);
-    
-    const { data, error } = await query.order(sortField, { ascending: sortDirection === "asc" });
+    try {
+      let query = supabase.from("staff_submissions").select("*");
+      
+      if (dateRange.start) query = query.gte("submitted_at", dateRange.start);
+      if (dateRange.end) query = query.lte("submitted_at", dateRange.end);
+      
+      const { data, error } = await query.order(sortField, { ascending: sortDirection === "asc" });
 
-    if (!error) {
-      setData(data || []);
+      if (!error) {
+        setData(data || []);
+      } else {
+        console.error("Error loading data:", error);
+      }
+    } catch (err) {
+      console.error("Load error:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [sortField, sortDirection, dateRange]);
   
-  useEffect(()=>{ load() },[load]);
+  useEffect(()=>{ load(); },[load]);
 
   const deleteRecord = async (id, fullName) => {
+    if (!id) {
+      alert("Invalid record ID");
+      return;
+    }
+    
     setDeleting(id);
     
     try {
@@ -982,22 +1048,34 @@ function Dashboard({admin,onLogout}) {
         .eq("id", id);
       
       if (error) {
+        console.error("Delete error:", error);
         alert("Error deleting record: " + error.message);
-      } else {
-        await load();
-        if (selected?.id === id) setSelected(null);
-        const successMsg = document.createElement('div');
-        successMsg.className = 'alert-success';
-        successMsg.style.position = 'fixed';
-        successMsg.style.top = '20px';
-        successMsg.style.right = '20px';
-        successMsg.style.zIndex = '1000';
-        successMsg.innerHTML = `✓ Record for "${fullName}" has been deleted.`;
-        document.body.appendChild(successMsg);
-        setTimeout(() => successMsg.remove(), 3000);
+        setDeleting(null);
+        return;
       }
+      
+      // IMMEDIATELY update local state - remove the deleted record
+      setData(prevData => prevData.filter(record => record.id !== id));
+      
+      // Close modal if the deleted record was open
+      if (selected?.id === id) {
+        setSelected(null);
+      }
+      
+      // Show success message
+      const successMsg = document.createElement('div');
+      successMsg.className = 'alert-success';
+      successMsg.style.position = 'fixed';
+      successMsg.style.top = '20px';
+      successMsg.style.right = '20px';
+      successMsg.style.zIndex = '1000';
+      successMsg.innerHTML = `✓ Record for "${fullName}" has been deleted successfully.`;
+      document.body.appendChild(successMsg);
+      setTimeout(() => successMsg.remove(), 3000);
+      
     } catch (err) {
-      alert("Error deleting record");
+      console.error("Delete error:", err);
+      alert("An error occurred while deleting the record.");
     } finally {
       setDeleting(null);
       setConfirmModal({ isOpen: false, id: null, name: "" });
@@ -1005,6 +1083,7 @@ function Dashboard({admin,onLogout}) {
   };
 
   const openConfirmModal = (id, name) => {
+    if (!id) return;
     setConfirmModal({ isOpen: true, id, name });
   };
 
@@ -1013,17 +1092,24 @@ function Dashboard({admin,onLogout}) {
   };
 
   const handlePrint = () => {
-    window.print();
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   // Full CSV export with every field
   const exportCSV = () => {
+    if (!data.length) {
+      alert("No data to export");
+      return;
+    }
     const header = EXPORT_COLUMNS.map(([lbl])=>`"${lbl}"`).join(",");
     const rows = data.map(d =>
       EXPORT_COLUMNS.map(([,key])=>`"${(d[key]||"").toString().replace(/"/g,'""')}"`).join(",")
     );
-    const blob = new Blob([[header,...rows].join("\n")],{type:"text/csv;charset=utf-8;"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="NYSEI_Staff_Data.csv"; a.click();
+    const blob = new Blob(["\uFEFF" + header + "\n" + rows.join("\n")],{type:"text/csv;charset=utf-8;"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`NYSEI_Staff_Data_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   const filtered = data
@@ -1049,8 +1135,10 @@ function Dashboard({admin,onLogout}) {
   const byGender = {Male:data.filter(x=>x.gender==="Male").length, Female:data.filter(x=>x.gender==="Female").length};
   
   const submissionsByMonth = data.reduce((acc, item) => {
-    const month = new Date(item.submitted_at).toLocaleString('default', { month: 'short' });
-    acc[month] = (acc[month] || 0) + 1;
+    if (item.submitted_at) {
+      const month = new Date(item.submitted_at).toLocaleString('default', { month: 'short' });
+      acc[month] = (acc[month] || 0) + 1;
+    }
     return acc;
   }, {});
   
@@ -1340,11 +1428,11 @@ function Dashboard({admin,onLogout}) {
                         {filtered.map(row => (
                           <tr key={row.id}>
                             <td style={{fontWeight:600}}>{row.full_name}<br/><span style={{fontSize:"0.68rem",color:C.muted}}>{row.national_id}</span></td>
-                            <td><FaEnvelope size={10} style={{marginRight:4}} /> {row.email}</td>
+                            <td><FaEnvelope size={10} style={{marginRight:4}} /> {row.email || "—"}</td>
                             <td>{row.gender === "Male" ? <FaMale color="#4A90E2" /> : <FaFemale color="#E25A6E" />} {row.gender}</td>
                             <td>{row.department}</td>
                             <td><span className="badge">{row.designation}</span></td>
-                            <td className="tbl-hide-mobile" style={{whiteSpace:"nowrap"}}>{new Date(row.submitted_at).toLocaleDateString()}</td>
+                            <td className="tbl-hide-mobile" style={{whiteSpace:"nowrap"}}>{row.submitted_at ? new Date(row.submitted_at).toLocaleDateString() : "—"}</td>
                             <td>
                               <div style={{display:"flex", gap:"5px"}}>
                                 <button className="btn-outline" style={{padding:"4px 10px"}} onClick={()=>setSelected(row)}>
@@ -1375,7 +1463,7 @@ function Dashboard({admin,onLogout}) {
                 ? <div style={{fontFamily:"sans-serif",color:C.muted,padding:"2rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaSpinner className="spin"/>Loading…</div>
                 : filtered.length===0
                   ? <div style={{fontFamily:"sans-serif",color:C.muted,padding:"2rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaUsers/>No records found.</div>
-                  : filtered.map((row,idx)=>(
+                  : filtered.map((row)=>(
                     <div className="rec-card" key={row.id}>
                       <div className="rec-card-header">
                         <div className="rec-avatar">{row.full_name?.charAt(0)?.toUpperCase()}</div>
@@ -1385,7 +1473,7 @@ function Dashboard({admin,onLogout}) {
                         </div>
                       </div>
                       <div className="rec-card-body">
-                        <div><div className="rec-field-lbl">Email</div><div className="rec-field-val">{row.email}</div></div>
+                        <div><div className="rec-field-lbl">Email</div><div className="rec-field-val">{row.email || "—"}</div></div>
                         <div><div className="rec-field-lbl">Gender</div><div className="rec-field-val" style={{display:"flex",alignItems:"center",gap:3}}>{row.gender==="Male"?<FaMale style={{color:"#2563EB"}}/>:<FaFemale style={{color:"#DB2777"}}/>}{row.gender}</div></div>
                         <div><div className="rec-field-lbl">Department</div><div className="rec-field-val">{row.department}</div></div>
                         <div><div className="rec-field-lbl">Designation</div><div className="rec-field-val"><span className="badge">{row.designation}</span></div></div>
