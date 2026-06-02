@@ -1,0 +1,786 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "./supabase";
+import { 
+  FaUsers, 
+  FaMale, 
+  FaFemale, 
+  FaWheelchair, 
+  FaGraduationCap, 
+  FaRegFileAlt,
+  FaChartBar,
+  FaTable,
+  FaDownload,
+  FaSignOutAlt,
+  FaUserShield,
+  FaEnvelope,
+  FaPhone,
+  FaCalendarAlt,
+  FaBuilding,
+  FaUserTie,
+  FaIdCard,
+  FaBirthdayCake,
+  FaBriefcase,
+  FaBook,
+  FaCertificate,
+  FaChalkboardTeacher,
+  FaClipboardList,
+  FaRegCheckCircle,
+  FaArrowLeft,
+  FaArrowRight,
+  FaSave,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaPlus,
+  FaSearch,
+  FaFilter,
+  FaTimes,
+  FaCheck,
+  FaSpinner,
+  FaExclamationTriangle,
+  FaInfoCircle,
+  FaChevronLeft,
+  FaChevronRight,
+  FaHome,
+  FaUser,
+  FaLock,
+  FaDatabase,
+  FaServer,
+  FaCloudUploadAlt,
+  FaFileExport,
+  FaPrint,
+  FaRegSmile,
+  FaRegFrown,
+  FaRegMeh,
+  FaStar,
+  FaRegStar,
+  FaThumbsUp,
+  FaThumbsDown,
+  FaHeart,
+  FaRegHeart
+} from 'react-icons/fa';
+
+
+const LOGO = "data:image/png;base64,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";
+
+const ADMINS = {
+  "deputy.principal": { password: "nysei2024", role: "Deputy Principal", name: "Deputy Principal" },
+  "principal": { password: "nysei2024", role: "Principal", name: "Principal" },
+};
+
+const STORAGE_KEY = "nysei_submissions";
+const DEPARTMENTS = ["Electrical", "Built Environment", "AutoCP", "Mechanical", "Computing Informatics", "Aeronautical"];
+const DESIGNATIONS = ["Full Time Lecturer", "Support Staff", "Part Time Lecturer", "Intern", "Teaching Practice"];
+const JOB_GROUPS = ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const STEPS = ["Personal","Employment","Qualifications","Prof. Dev","Review"];
+
+const C = {
+  primary: "#1B3A2D",
+  accent: "#C8922A",
+  accent2: "#8B1A1A",
+  light: "#EFF4F1",
+  bg: "#F3F5F2",
+  white: "#FFFFFF",
+  text: "#1A2A22",
+  muted: "#5A7060",
+  border: "#C8D4CB",
+  success: "#1B5E36",
+  danger: "#9B1C1C",
+};
+
+const css = `
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', serif; background: ${C.bg}; color: ${C.text}; }
+  .app { min-height: 100vh; }
+
+  /* Header */
+  .header { background: ${C.primary}; color: #fff; border-bottom: 4px solid ${C.accent}; position: sticky; top: 0; z-index: 50; }
+  .header-inner { max-width: 1100px; margin: 0 auto; padding: 0 1rem; display: flex; align-items: center; justify-content: space-between; min-height: 64px; }
+  .header-logo { display: flex; align-items: center; gap: 12px; }
+  .header-logo img { width: 48px; height: 48px; object-fit: contain; }
+  .header-title { font-size: 1rem; font-weight: 700; letter-spacing: 0.06em; line-height: 1.2; }
+  .header-sub { font-size: 0.62rem; opacity: 0.75; letter-spacing: 0.12em; text-transform: uppercase; font-family: sans-serif; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* Containers */
+  .container { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem; }
+  .container-wide { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+  /* Cards */
+  .card { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
+  .card-sm { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 8px; padding: 1rem 1.25rem; }
+
+  /* Section title */
+  .sec-title { font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: ${C.accent}; font-family: sans-serif; font-weight: 700; margin-bottom: 1rem; padding-bottom: 6px; border-bottom: 2px solid ${C.accent}; }
+
+  /* Form fields */
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .label { font-size: 0.75rem; font-weight: 600; color: ${C.muted}; font-family: sans-serif; letter-spacing: 0.02em; }
+  input, select, textarea { border: 1px solid ${C.border}; border-radius: 6px; padding: 9px 12px; font-size: 0.9rem; font-family: sans-serif; background: ${C.white}; color: ${C.text}; outline: none; width: 100%; transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color: ${C.primary}; }
+  textarea { min-height: 80px; resize: vertical; }
+
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .grid-stat { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+
+  /* Buttons */
+  .btn { background: ${C.primary}; color: #fff; border: none; border-radius: 6px; padding: 10px 24px; font-size: 0.88rem; font-family: sans-serif; cursor: pointer; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
+  .btn:active { opacity: 0.85; }
+  .btn-accent { background: ${C.accent}; color: #fff; border: none; border-radius: 6px; padding: 10px 24px; font-size: 0.88rem; font-family: sans-serif; cursor: pointer; font-weight: 600; }
+  .btn-outline { background: transparent; color: ${C.primary}; border: 1.5px solid ${C.primary}; border-radius: 6px; padding: 8px 18px; font-size: 0.82rem; font-family: sans-serif; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn-ghost { background: transparent; color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.35); border-radius: 6px; padding: 7px 14px; font-size: 0.78rem; font-family: sans-serif; cursor: pointer; white-space: nowrap; }
+
+  /* Steps */
+  .steps { display: flex; gap: 4px; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 4px; }
+  .step-item { flex: 1; min-width: 70px; padding: 7px 4px; text-align: center; font-size: 0.7rem; font-weight: 600; border-radius: 6px; font-family: sans-serif; white-space: nowrap; transition: all 0.2s; border: 1.5px solid ${C.border}; }
+  .step-active { background: ${C.primary}; color: #fff; border-color: ${C.primary}; }
+  .step-done { background: ${C.success}; color: #fff; border-color: ${C.success}; }
+  .step-idle { background: ${C.light}; color: ${C.muted}; }
+
+  /* Alerts */
+  .alert-success { background: #ECFDF5; border: 1px solid #A7F3D0; color: ${C.success}; border-radius: 8px; padding: 0.9rem 1rem; font-size: 0.85rem; font-family: sans-serif; margin-bottom: 1rem; }
+  .alert-danger { background: #FEF2F2; border: 1px solid #FECACA; color: ${C.danger}; border-radius: 8px; padding: 0.9rem 1rem; font-size: 0.85rem; font-family: sans-serif; margin-bottom: 1rem; }
+
+  /* Stat card */
+  .stat-card { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 10px; }
+  .stat-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .stat-label { font-family: sans-serif; font-size: 0.65rem; color: ${C.muted}; text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat-val { font-family: sans-serif; font-size: 1.5rem; font-weight: 700; color: ${C.primary}; }
+
+  /* Bar chart */
+  .bar-bg { background: ${C.light}; border-radius: 4px; height: 9px; }
+  .bar-fill { background: ${C.primary}; height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+  /* Table */
+  .tbl { width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 0.82rem; }
+  .tbl th { padding: 9px 10px; text-align: left; color: ${C.muted}; font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; background: ${C.light}; white-space: nowrap; }
+  .tbl td { padding: 8px 10px; border-bottom: 1px solid ${C.border}; }
+  .tbl tr:last-child td { border-bottom: none; }
+
+  /* Review row */
+  .rev-row { display: flex; border-bottom: 1px solid ${C.border}; padding: 5px 0; font-family: sans-serif; font-size: 0.83rem; }
+  .rev-key { width: 180px; flex-shrink: 0; color: ${C.muted}; }
+  .rev-val { color: ${C.text}; font-weight: 500; }
+
+  /* Nav */
+  .nav-bar { background: ${C.white}; border-bottom: 1px solid ${C.border}; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .nav-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .nav-user { display: flex; align-items: center; gap: 10px; font-family: sans-serif; font-size: 0.82rem; flex-wrap: wrap; }
+
+  /* Date row */
+  .date-row { display: flex; gap: 6px; }
+  .date-dd { width: 58px; flex-shrink: 0; }
+  .date-mm { flex: 1; }
+  .date-yy { width: 68px; flex-shrink: 0; }
+
+  /* Modal overlay */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 1rem; overflow-y: auto; }
+  .modal { background: ${C.white}; border-radius: 10px; max-width: 640px; width: 100%; margin: auto; padding: 1.5rem; max-height: 90vh; overflow-y: auto; }
+
+  /* Qual row */
+  .qual-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px solid ${C.border}; }
+  .qual-label { font-family: sans-serif; font-size: 0.82rem; font-weight: 700; color: ${C.primary}; margin-bottom: 6px; }
+
+  /* Badge */
+  .badge { background: ${C.light}; padding: 2px 9px; border-radius: 4px; font-size: 0.73rem; font-family: sans-serif; color: ${C.primary}; }
+  .badge-accent { background: ${C.accent}; color: #fff; font-size: 0.67rem; padding: 2px 10px; border-radius: 99px; letter-spacing: 0.08em; text-transform: uppercase; font-family: sans-serif; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header-title { font-size: 0.82rem; }
+    .header-sub { display: none; }
+    .header-logo img { width: 40px; height: 40px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .qual-row { grid-template-columns: 1fr 1fr; }
+    .qual-row .qual-name { grid-column: 1 / -1; }
+    .rev-key { width: 130px; font-size: 0.75rem; }
+    .rev-val { font-size: 0.78rem; }
+    .container, .container-wide { padding: 1rem 0.75rem; }
+    .card { padding: 1rem; }
+    .steps { gap: 3px; }
+    .step-item { min-width: 58px; font-size: 0.62rem; padding: 6px 2px; }
+    .btn, .btn-accent { padding: 10px 16px; font-size: 0.84rem; }
+    .stat-val { font-size: 1.3rem; }
+    .tbl th, .tbl td { padding: 7px 8px; font-size: 0.76rem; }
+    .nav-user span { display: none; }
+    .date-dd { width: 50px; }
+    .date-yy { width: 60px; }
+    .modal { padding: 1rem; }
+  }
+  @media (max-width: 380px) {
+    .header-title { font-size: 0.75rem; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+`;
+
+const emptyForm = () => ({
+  fullName:"", gender:"", nationalId:"", dobDay:"", dobMonth:"", dobYear:"",
+  jobGroup:"", disability:"", disabilityNature:"",
+  appointmentDay:"", appointmentMonth:"", appointmentYear:"",
+  retirementDay:"", retirementMonth:"", retirementYear:"",
+  designation:"", department:"", dutiesRoles:"", responsibilities:"",
+  kcseYear:"", kcseGrade:"",
+  certName:"", certYear:"", certGrade:"",
+  diplomaName:"", diplomaYear:"", diplomaGrade:"",
+  hdipName:"", hdipYear:"", hdipGrade:"",
+  degreeName:"", degreeYear:"", degreeGrade:"",
+  mastersName:"", mastersYear:"", mastersGrade:"",
+  phdName:"", phdYear:"", phdGrade:"",
+  pedagogyYear:"", pedagogyGrade:"",
+  totYear:"", totGrade:"",
+  supervYear:"", supervGrade:"",
+  sldpYear:"", sldpGrade:"",
+  retireCourseYear:"", retireCourseGrade:"",
+  tvetaDate:"", tvetaExpiry:"", tvetaRegNo:"",
+});
+
+function DateFields({ prefix, label, form, onChange, required }) {
+  const s = (k, v) => onChange(prefix + k, v);
+  return (
+    <div className="field">
+      <label className="label">{label}{required && " *"}</label>
+      <div className="date-row">
+        <input className="date-dd" placeholder="DD" type="number" min={1} max={31} value={form[prefix+"Day"]} onChange={e=>s("Day",e.target.value)} />
+        <select className="date-mm" value={form[prefix+"Month"]} onChange={e=>s("Month",e.target.value)}>
+          <option value="">Month</option>
+          {MONTHS.map(m=><option key={m}>{m}</option>)}
+        </select>
+        <input className="date-yy" placeholder="YYYY" type="number" value={form[prefix+"Year"]} onChange={e=>s("Year",e.target.value)} />
+      </div>
+    </div>
+  );
+}
+
+function DataForm() {
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState(emptyForm());
+  const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  const inp = k => ({ value: form[k], onChange: e => set(k, e.target.value) });
+  const isPartTime = ["Part Time Lecturer","Intern","Teaching Practice"].includes(form.designation);
+
+  const validate = () => {
+    const e = {};
+    if (step===0) {
+      if (!form.fullName.trim()) e.fullName="Required";
+      if (!form.gender) e.gender="Required";
+      if (!form.nationalId.trim()) e.nationalId="Required";
+    }
+    if (step===1) {
+      if (!form.designation) e.designation="Required";
+      if (!form.department) e.department="Required";
+    }
+    setErrors(e);
+    return Object.keys(e).length===0;
+  };
+
+  const next = () => { if(validate()) setStep(s=>Math.min(s+1,4)); };
+  const back = () => setStep(s=>Math.max(s-1,0));
+
+  const submit = async () => {
+    // Map form fields (camelCase) to database columns (snake_case)
+    const dbRecord = {
+      full_name: form.fullName,
+      gender: form.gender,
+      national_id: form.nationalId,
+      dob_day: form.dobDay,
+      dob_month: form.dobMonth,
+      dob_year: form.dobYear,
+      job_group: form.jobGroup,
+      disability: form.disability,
+      disability_nature: form.disabilityNature,
+      appointment_day: form.appointmentDay,
+      appointment_month: form.appointmentMonth,
+      appointment_year: form.appointmentYear,
+      retirement_day: form.retirementDay,
+      retirement_month: form.retirementMonth,
+      retirement_year: form.retirementYear,
+      designation: form.designation,
+      department: form.department,
+      duties_roles: form.dutiesRoles,
+      responsibilities: form.responsibilities,
+      kcse_year: form.kcseYear,
+      kcse_grade: form.kcseGrade,
+      cert_name: form.certName,
+      cert_year: form.certYear,
+      cert_grade: form.certGrade,
+      diploma_name: form.diplomaName,
+      diploma_year: form.diplomaYear,
+      diploma_grade: form.diplomaGrade,
+      hdip_name: form.hdipName,
+      hdip_year: form.hdipYear,
+      hdip_grade: form.hdipGrade,
+      degree_name: form.degreeName,
+      degree_year: form.degreeYear,
+      degree_grade: form.degreeGrade,
+      masters_name: form.mastersName,
+      masters_year: form.mastersYear,
+      masters_grade: form.mastersGrade,
+      phd_name: form.phdName,
+      phd_year: form.phdYear,
+      phd_grade: form.phdGrade,
+      pedagogy_year: form.pedagogyYear,
+      pedagogy_grade: form.pedagogyGrade,
+      tot_year: form.totYear,
+      tot_grade: form.totGrade,
+      superv_year: form.supervYear,
+      superv_grade: form.supervGrade,
+      sldp_year: form.sldpYear,
+      sldp_grade: form.sldpGrade,
+      retire_course_year: form.retireCourseYear,
+      retire_course_grade: form.retireCourseGrade,
+      tveta_date: form.tvetaDate,
+      tveta_expiry: form.tvetaExpiry,
+      tveta_reg_no: form.tvetaRegNo,
+      submitted_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase
+      .from("staff_submissions")
+      .insert([dbRecord]);
+
+    if (error) {
+      console.error(error);
+      alert(error.message);
+      return;
+    }
+
+    setSubmitted(true);
+  };
+
+  if (submitted) return (
+    <div className="container">
+      <div className="card" style={{textAlign:"center", padding:"2.5rem 1.5rem"}}>
+        <div style={{fontSize:52, marginBottom:"1rem"}}>✅</div>
+        <h2 style={{fontFamily:"sans-serif", color:C.success, marginBottom:6}}>Submission Received</h2>
+        <p style={{fontFamily:"sans-serif", color:C.muted, marginBottom:"1.5rem"}}>Thank you, <strong>{form.fullName}</strong>. Your data has been recorded successfully.</p>
+        <button className="btn" onClick={()=>{setForm(emptyForm());setStep(0);setSubmitted(false);}}>Submit Another Response</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="container">
+      <div className="card">
+        <div style={{marginBottom:"1.25rem"}}>
+          <h1 style={{fontFamily:"sans-serif", fontSize:"1.25rem", color:C.primary, marginBottom:4}}>Staff Data Collection Form</h1>
+          <p style={{fontFamily:"sans-serif", fontSize:"0.8rem", color:C.muted}}>National Youth Service Engineering Institute — Please complete all applicable fields accurately.</p>
+        </div>
+
+        <div className="steps">
+          {STEPS.map((s,i)=>(
+            <div key={i} className={"step-item " + (i===step?"step-active":i<step?"step-done":"step-idle")}>
+              {i<step?"✓ ":""}{s}
+            </div>
+          ))}
+        </div>
+
+        {step===0 && <>
+          <div className="sec-title">Personal Information</div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">Full Name *</label>
+              <input {...inp("fullName")} style={{borderColor:errors.fullName?C.danger:C.border}} />
+              {errors.fullName && <span style={{color:C.danger,fontSize:"0.72rem",fontFamily:"sans-serif"}}>{errors.fullName}</span>}
+            </div>
+            <div className="field">
+              <label className="label">Gender *</label>
+              <select {...inp("gender")} style={{borderColor:errors.gender?C.danger:C.border}}>
+                <option value="">Select…</option><option>Male</option><option>Female</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">National ID No. *</label>
+              <input {...inp("nationalId")} style={{borderColor:errors.nationalId?C.danger:C.border}} />
+            </div>
+            <DateFields prefix="dob" label="Date of Birth" form={form} onChange={set} required />
+          </div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">Disability</label>
+              <select {...inp("disability")}>
+                <option value="">Select…</option><option>No</option><option>Yes</option>
+              </select>
+            </div>
+            {form.disability==="Yes" && <div className="field">
+              <label className="label">Nature of Disability</label>
+              <input {...inp("disabilityNature")} placeholder="Describe…" />
+            </div>}
+          </div>
+        </>}
+
+        {step===1 && <>
+          <div className="sec-title">Employment Details</div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">Designation *</label>
+              <select {...inp("designation")} style={{borderColor:errors.designation?C.danger:C.border}}>
+                <option value="">Select…</option>
+                {DESIGNATIONS.map(d=><option key={d}>{d}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label className="label">Department *</label>
+              <select {...inp("department")} style={{borderColor:errors.department?C.danger:C.border}}>
+                <option value="">Select…</option>
+                {DEPARTMENTS.map(d=><option key={d}>{d}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid-2">
+            {!isPartTime && <div className="field">
+              <label className="label">Job Group</label>
+              <select {...inp("jobGroup")}>
+                <option value="">Select…</option>
+                {JOB_GROUPS.map(g=><option key={g}>Group {g}</option>)}
+              </select>
+            </div>}
+            <DateFields prefix="appointment" label="Date of Appointment" form={form} onChange={set} />
+          </div>
+          <div className="grid-2">
+            <DateFields prefix="retirement" label={isPartTime?"Contract Expiry":"Date of Retirement"} form={form} onChange={set} />
+          </div>
+          <div className="field" style={{marginBottom:"1rem"}}>
+            <label className="label">Duties & Roles (e.g. HOD, Deputy HOD, Internal Verifier)</label>
+            <input {...inp("dutiesRoles")} placeholder="e.g. HOD, Deputy HOD, Internal Verifier" />
+          </div>
+          <div className="field">
+            <label className="label">Responsibilities</label>
+            <textarea {...inp("responsibilities")} placeholder="Describe your key responsibilities…" />
+          </div>
+        </>}
+
+        {step===2 && <>
+          <div className="sec-title">Academic Qualifications</div>
+          <p style={{fontFamily:"sans-serif",fontSize:"0.78rem",color:C.muted,marginBottom:"1rem"}}>Fill only qualifications you hold. Leave blank if not applicable.</p>
+          {[
+            {label:"KCSE", prefix:"kcse", noName:true},
+            {label:"Certificate", prefix:"cert"},
+            {label:"Diploma", prefix:"diploma"},
+            {label:"Higher Diploma", prefix:"hdip"},
+            {label:"Degree", prefix:"degree"},
+            {label:"Masters", prefix:"masters"},
+            {label:"PhD", prefix:"phd"},
+          ].map(({label,prefix,noName})=>(
+            <div key={prefix} style={{borderBottom:`1px solid ${C.border}`,paddingBottom:"0.75rem",marginBottom:"0.75rem"}}>
+              <div className="qual-label">{label}</div>
+              <div className="qual-row">
+                {!noName && <div className={"field qual-name"}>
+                  <label className="label">Name / Institution</label>
+                  <input value={form[prefix+"Name"]} onChange={e=>set(prefix+"Name",e.target.value)} />
+                </div>}
+                <div className="field">
+                  <label className="label">Year</label>
+                  <input type="number" placeholder="YYYY" value={form[prefix+"Year"]} onChange={e=>set(prefix+"Year",e.target.value)} />
+                </div>
+                <div className="field">
+                  <label className="label">Grade / Score</label>
+                  <input value={form[prefix+"Grade"]} onChange={e=>set(prefix+"Grade",e.target.value)} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </>}
+
+        {step===3 && <>
+          <div className="sec-title">Professional Development</div>
+          <p style={{fontFamily:"sans-serif",fontSize:"0.78rem",color:C.muted,marginBottom:"1rem"}}>Complete only trainings/courses you have undertaken.</p>
+          {[
+            {label:"Pedagogy", yk:"pedagogyYear", gk:"pedagogyGrade"},
+            {label:"Training of Trainers (ToT)", yk:"totYear", gk:"totGrade"},
+            {label:"Supervisory Course", yk:"supervYear", gk:"supervGrade"},
+            {label:"SLDP", yk:"sldpYear", gk:"sldpGrade"},
+            {label:"Retirement Course", yk:"retireCourseYear", gk:"retireCourseGrade"},
+          ].map(({label,yk,gk})=>(
+            <div key={yk} style={{borderBottom:`1px solid ${C.border}`,paddingBottom:"0.75rem",marginBottom:"0.75rem"}}>
+              <div className="qual-label">{label}</div>
+              <div className="grid-2" style={{marginBottom:0}}>
+                <div className="field">
+                  <label className="label">Year</label>
+                  <input type="number" placeholder="YYYY" value={form[yk]} onChange={e=>set(yk,e.target.value)} />
+                </div>
+                <div className="field">
+                  <label className="label">Grade / Score</label>
+                  <input value={form[gk]} onChange={e=>set(gk,e.target.value)} />
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="sec-title" style={{marginTop:"1.5rem"}}>TVETA Registration</div>
+          <div className="grid-3">
+            <div className="field">
+              <label className="label">Date of Registration</label>
+              <input type="date" {...inp("tvetaDate")} />
+            </div>
+            <div className="field">
+              <label className="label">Expiry Date</label>
+              <input type="date" {...inp("tvetaExpiry")} />
+            </div>
+            <div className="field">
+              <label className="label">Registration Number</label>
+              <input {...inp("tvetaRegNo")} placeholder="e.g. TVETA/2023/…" />
+            </div>
+          </div>
+        </>}
+
+        {step===4 && <>
+          <div className="sec-title">Review Your Submission</div>
+          <div className="alert-success">Please confirm your details below before submitting.</div>
+          {[
+            ["Full Name", form.fullName],["Gender", form.gender],["National ID", form.nationalId],
+            ["Date of Birth", [form.dobDay,form.dobMonth,form.dobYear].filter(Boolean).join(" ")],
+            ["Designation", form.designation],["Department", form.department],
+            ["Job Group", form.jobGroup||"N/A"],["Disability", form.disability||"Not stated"],
+            ["Appointment", [form.appointmentDay,form.appointmentMonth,form.appointmentYear].filter(Boolean).join(" ")],
+            ["Retirement/Expiry", [form.retirementDay,form.retirementMonth,form.retirementYear].filter(Boolean).join(" ")],
+            ["Duties/Roles", form.dutiesRoles||"—"],
+            ["Degree", form.degreeName?`${form.degreeName} (${form.degreeYear})`:"—"],
+            ["Masters", form.mastersName?`${form.mastersName} (${form.mastersYear})`:"—"],
+            ["TVETA Reg No.", form.tvetaRegNo||"—"],
+          ].map(([k,v])=>(
+            <div className="rev-row" key={k}>
+              <span className="rev-key">{k}</span>
+              <span className="rev-val">{v||"—"}</span>
+            </div>
+          ))}
+        </>}
+
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:"1.75rem",gap:8}}>
+          {step>0 ? <button className="btn-outline" onClick={back}>← Back</button> : <span/>}
+          {step<4
+            ? <button className="btn" onClick={next}>Continue →</button>
+            : <button className="btn-accent" onClick={submit}>Submit Form ✓</button>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Login({ onLogin }) {
+  const [u,setU]=useState(""); const [p,setP]=useState(""); const [err,setErr]=useState("");
+  const submit = () => {
+    const a = ADMINS[u.toLowerCase().trim()];
+    if (a && a.password===p) onLogin({username:u,...a});
+    else setErr("Invalid username or password.");
+  };
+  return (
+    <div style={{minHeight:"calc(100vh - 68px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem 1rem",background:C.bg}}>
+      <div className="card" style={{maxWidth:380,width:"100%",boxShadow:"0 4px 24px rgba(0,0,0,0.08)"}}>
+        <div style={{textAlign:"center",marginBottom:"1.75rem"}}>
+          <img src={LOGO} alt="NYS Logo" style={{width:64,height:64,objectFit:"contain",marginBottom:12}} />
+          <h2 style={{fontFamily:"sans-serif",color:C.primary,marginBottom:4}}>Admin Login</h2>
+          <p style={{fontFamily:"sans-serif",fontSize:"0.78rem",color:C.muted}}>NYSEI Staff Data Platform</p>
+        </div>
+        {err && <div className="alert-danger">{err}</div>}
+        <div className="field" style={{marginBottom:"1rem"}}>
+          <label className="label">Username</label>
+          <input value={u} onChange={e=>{setU(e.target.value);setErr("");}} placeholder="principal or deputy.principal" />
+        </div>
+        <div className="field" style={{marginBottom:"1.5rem"}}>
+          <label className="label">Password</label>
+          <input type="password" value={p} onChange={e=>{setP(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&submit()} />
+        </div>
+        <button className="btn" style={{width:"100%"}} onClick={submit}>Sign In</button>
+        <p style={{fontFamily:"sans-serif",fontSize:"0.7rem",color:C.muted,textAlign:"center",marginTop:"1rem"}}>
+          Accounts: <code>principal</code> or <code>deputy.principal</code> · password: <code>nysei2024</code>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({label,value,icon}) {
+  return (
+    <div className="stat-card">
+      <div className="stat-icon">{icon}</div>
+      <div><div className="stat-label">{label}</div><div className="stat-val">{value}</div></div>
+    </div>
+  );
+}
+
+function BarChart({data,title}) {
+  const max = Math.max(...Object.values(data),1);
+  return (
+    <div className="card">
+      <div className="sec-title">{title}</div>
+      {Object.entries(data).sort((a,b)=>b[1]-a[1]).map(([k,v])=>(
+        <div key={k} style={{marginBottom:10,fontFamily:"sans-serif"}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.78rem",marginBottom:3}}>
+            <span style={{color:C.text}}>{k}</span>
+            <span style={{color:C.muted,fontWeight:600}}>{v}</span>
+          </div>
+          <div className="bar-bg"><div className="bar-fill" style={{width:`${(v/max)*100}%`}} /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Dashboard({admin,onLogout}) {
+  const [data,setData]=useState([]);
+  const [selected,setSelected]=useState(null);
+  const [view,setView]=useState("analytics");
+  const [filterDept,setFilterDept]=useState("");
+  const [filterDesig,setFilterDesig]=useState("");
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("staff_submissions")
+      .select("*")
+      .order("submitted_at", {
+        ascending: false
+      });
+
+    if (!error) {
+      setData(data);
+    }
+  }, []);
+  
+  useEffect(()=>{ load() },[load]);
+
+  const filtered = data.filter(d=>(!filterDept||d.department===filterDept)&&(!filterDesig||d.designation===filterDesig));
+  const byDept = DEPARTMENTS.reduce((a,d)=>{a[d]=data.filter(x=>x.department===d).length;return a;},{});
+  const byDesig = DESIGNATIONS.reduce((a,d)=>{a[d]=data.filter(x=>x.designation===d).length;return a;},{});
+  const byGender = {Male:data.filter(x=>x.gender==="Male").length, Female:data.filter(x=>x.gender==="Female").length};
+
+  const exportCSV = () => {
+    const keys = Object.keys(emptyForm());
+    const rows = [keys.join(","),...data.map(d=>keys.map(k=>`"${(d[k]||"").toString().replace(/"/g,'""')}"`).join(","))];
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([rows.join("\n")],{type:"text/csv"})); a.download="nysei_staff_data.csv"; a.click();
+  };
+
+  const navBtn = (id,lbl) => (
+    <button key={id} className="btn-outline" style={{background:view===id?C.primary:"transparent",color:view===id?"#fff":C.primary,borderColor:view===id?C.primary:C.border,padding:"7px 16px",fontSize:"0.8rem"}} onClick={()=>setView(id)}>{lbl}</button>
+  );
+
+  return (
+    <div style={{background:C.bg,minHeight:"100vh"}}>
+      <div className="nav-bar">
+        <div className="nav-tabs">{[["analytics","📊 Analytics"],["records","📋 Records"]].map(([id,lbl])=>navBtn(id,lbl))}</div>
+        <div className="nav-user">
+          <span style={{color:C.muted}}>Logged in as <strong>{admin.name}</strong></span>
+          <button className="btn-outline" style={{padding:"5px 12px",fontSize:"0.76rem"}} onClick={onLogout}>Sign Out</button>
+        </div>
+      </div>
+
+      <div className="container-wide">
+        {view==="analytics" && <>
+          <div className="grid-stat">
+            <StatCard label="Total Staff" value={data.length} icon="👥" />
+            <StatCard label="Male" value={byGender.Male} icon="👨" />
+            <StatCard label="Female" value={byGender.Female} icon="👩" />
+            <StatCard label="With Disability" value={data.filter(x=>x.disability==="Yes").length} icon="♿" />
+            <StatCard label="Degree Holders" value={data.filter(x=>x.degree_year).length} icon="🎓" />
+            <StatCard label="TVETA Registered" value={data.filter(x=>x.tveta_reg_no?.trim()).length} icon="📜" />
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:"1rem"}}>
+            <BarChart data={byDept} title="Staff by Department" />
+            <BarChart data={byDesig} title="Staff by Designation" />
+          </div>
+        </>}
+
+        {view==="records" && <>
+          <div style={{display:"flex",gap:8,marginBottom:"1rem",flexWrap:"wrap",alignItems:"center"}}>
+            <select style={{border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 10px",fontSize:"0.82rem",fontFamily:"sans-serif",minWidth:160}} value={filterDept} onChange={e=>setFilterDept(e.target.value)}>
+              <option value="">All Departments</option>
+              {DEPARTMENTS.map(d=><option key={d}>{d}</option>)}
+            </select>
+            <select style={{border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 10px",fontSize:"0.82rem",fontFamily:"sans-serif",minWidth:160}} value={filterDesig} onChange={e=>setFilterDesig(e.target.value)}>
+              <option value="">All Designations</option>
+              {DESIGNATIONS.map(d=><option key={d}>{d}</option>)}
+            </select>
+            <button className="btn-outline" style={{marginLeft:"auto"}} onClick={exportCSV}>⬇ Export CSV</button>
+          </div>
+          <div className="card" style={{padding:0,overflow:"hidden"}}>
+            {filtered.length===0
+              ? <p style={{fontFamily:"sans-serif",color:C.muted,textAlign:"center",padding:"2.5rem"}}>No submissions yet.</p>
+              : <div style={{overflowX:"auto"}}>
+                <table className="tbl">
+                  <thead><tr>
+                    {["Name","Gender","Dept","Designation","DOB","TVETA No.","Action"].map(h=><th key={h}>{h}</th>)}
+                  </tr></thead>
+                  <tbody>
+                    {filtered.map(row=>(
+                      <tr key={row.id}>
+                        <td style={{fontWeight:600}}>{row.full_name}</td>
+                        <td>{row.gender}</td>
+                        <td>{row.department}</td>
+                        <td><span className="badge">{row.designation}</span></td>
+                        <td style={{whiteSpace:"nowrap"}}>{[row.dob_day,row.dob_month,row.dob_year].filter(Boolean).join(" ")}</td>
+                        <td>{row.tveta_reg_no||"—"}</td>
+                        <td><button className="btn-outline" style={{padding:"3px 10px",fontSize:"0.72rem"}} onClick={()=>setSelected(row)}>View</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </>}
+      </div>
+
+      {selected && (
+        <div className="overlay" onClick={()=>setSelected(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.25rem"}}>
+              <h2 style={{fontFamily:"sans-serif",color:C.primary,fontSize:"1.1rem"}}>{selected.full_name}</h2>
+              <button className="btn-outline" style={{padding:"4px 12px"}} onClick={()=>setSelected(null)}>✕ Close</button>
+            </div>
+            {[
+              ["Personal",[["Full Name",selected.full_name],["Gender",selected.gender],["National ID",selected.national_id],["Date of Birth",[selected.dob_day,selected.dob_month,selected.dob_year].filter(Boolean).join(" ")],["Disability",selected.disability],["Disability Nature",selected.disability_nature]]],
+              ["Employment",[["Designation",selected.designation],["Department",selected.department],["Job Group",selected.job_group],["Date of Appointment",[selected.appointment_day,selected.appointment_month,selected.appointment_year].filter(Boolean).join(" ")],["Retirement/Expiry",[selected.retirement_day,selected.retirement_month,selected.retirement_year].filter(Boolean).join(" ")],["Duties/Roles",selected.duties_roles],["Responsibilities",selected.responsibilities]]],
+              ["Academic Qualifications",[["KCSE",selected.kcse_year?`${selected.kcse_year} — ${selected.kcse_grade}`:""],["Certificate",selected.cert_name?`${selected.cert_name} (${selected.cert_year}) — ${selected.cert_grade}`:""],["Diploma",selected.diploma_name?`${selected.diploma_name} (${selected.diploma_year})`:""],["Higher Diploma",selected.hdip_name?`${selected.hdip_name} (${selected.hdip_year})`:""],["Degree",selected.degree_name?`${selected.degree_name} (${selected.degree_year})`:""],["Masters",selected.masters_name?`${selected.masters_name} (${selected.masters_year})`:""],["PhD",selected.phd_name?`${selected.phd_name} (${selected.phd_year})`:""]]],
+              ["Professional Dev",[["Pedagogy",selected.pedagogy_year?`${selected.pedagogy_year} — ${selected.pedagogy_grade}`:""],["ToT",selected.tot_year?`${selected.tot_year} — ${selected.tot_grade}`:""],["Supervisory",selected.superv_year?`${selected.superv_year} — ${selected.superv_grade}`:""],["SLDP",selected.sldp_year?`${selected.sldp_year} — ${selected.sldp_grade}`:""],["TVETA Reg No.",selected.tveta_reg_no],["TVETA Registered",selected.tveta_date],["TVETA Expiry",selected.tveta_expiry]]],
+            ].map(([sec,fields])=>(
+              <div key={sec} style={{marginBottom:"1.25rem"}}>
+                <div className="sec-title">{sec}</div>
+                {fields.filter(([,v])=>v).map(([k,v])=>(
+                  <div className="rev-row" key={k}><span className="rev-key">{k}</span><span className="rev-val">{v}</span></div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  const [screen,setScreen]=useState("form");
+  const [admin,setAdmin]=useState(null);
+  return (
+    <div className="app">
+      <style>{css}</style>
+      <header className="header">
+        <div className="header-inner">
+          <div className="header-logo">
+            <img src={LOGO} alt="NYS Logo" />
+            <div>
+              <div className="header-title">NYS Engineering Institute</div>
+              <div className="header-sub">Staff Data Collection Platform</div>
+            </div>
+          </div>
+          <div className="header-actions">
+            {screen!=="form" && <button className="btn-ghost" onClick={()=>setScreen("form")}>📋 Form</button>}
+            {screen==="form" && <button className="btn-ghost" onClick={()=>setScreen(admin?"dashboard":"login")}>🔐 Admin</button>}
+            {screen==="login" && <span className="badge-accent">Login</span>}
+            {screen==="dashboard" && <span className="badge-accent">{admin?.role}</span>}
+          </div>
+        </div>
+      </header>
+      {screen==="form" && <DataForm />}
+      {screen==="login" && <Login onLogin={u=>{setAdmin(u);setScreen("dashboard");}} />}
+      {screen==="dashboard" && admin && <Dashboard admin={admin} onLogout={()=>{setAdmin(null);setScreen("form");}} />}
+    </div>
+  );
+}
