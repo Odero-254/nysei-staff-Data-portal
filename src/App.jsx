@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabase";
 import bcrypt from 'bcryptjs';
 import logo from './assets/logo.png';
-import { 
+import { FaPlus } from 'react-icons/fa';
+import {
   FaUsers, FaMale, FaFemale, FaWheelchair, FaGraduationCap, FaRegFileAlt,
   FaChartBar, FaTable, FaDownload, FaSignOutAlt, FaUserShield, FaBuilding,
   FaUserTie, FaCertificate, FaEye, FaTimes, FaArrowLeft, FaArrowRight,
@@ -22,35 +23,59 @@ import {
 
 const LOGO = logo;
 
-const DEPARTMENTS = ["Electrical", "Built Environment", "AutoCP", "Mechanical", "Computing Informatics", "Aeronautical"];
+const DEPARTMENTS = ["Electrical", "Built Environment", "AutoCP", "Mechanical", "Computing and Informatics", "Aeronautical"];
 const DESIGNATIONS = ["Full Time Lecturer", "Support Staff", "Part Time Lecturer", "Intern", "Teaching Practice"];
-const JOB_GROUPS = ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V"];
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const STEPS = ["Personal","Employment","Qualifications","Prof. Dev","Review"];
+const JOB_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const STEPS = ["Personal", "Employment", "Qualifications", "Prof. Dev", "Review"];
 
-// ALL EXPORT COLUMNS (human-readable label → db key)
+const parseDateString = (dateStr) => {
+  if (!dateStr) return { day: "", month: "", year: "" };
+  const [y, m, d] = dateStr.split("-");
+  const monthIndex = parseInt(m, 10) - 1;
+  const monthName = MONTHS[monthIndex] || "";
+  return {
+    day: parseInt(d, 10).toString(),
+    month: monthName,
+    year: y
+  };
+};
+
+const formatDateString = (day, month, year) => {
+  if (!day || !month || !year) return "";
+  const monthIndex = MONTHS.indexOf(month);
+  if (monthIndex === -1) return "";
+  const mStr = String(monthIndex + 1).padStart(2, '0');
+  const dStr = String(day).padStart(2, '0');
+  return `${year}-${mStr}-${dStr}`;
+};
+
+// ALL EXPORT COLUMNS
 const EXPORT_COLUMNS = [
-  ["Full Name","full_name"],["Email","email"],["Gender","gender"],["National ID","national_id"],
-  ["DOB Day","dob_day"],["DOB Month","dob_month"],["DOB Year","dob_year"],
-  ["Disability","disability"],["Disability Nature","disability_nature"],
-  ["Job Group","job_group"],["Designation","designation"],["Department","department"],
-  ["Appointment Day","appointment_day"],["Appointment Month","appointment_month"],["Appointment Year","appointment_year"],
-  ["Retirement/Expiry Day","retirement_day"],["Retirement/Expiry Month","retirement_month"],["Retirement/Expiry Year","retirement_year"],
-  ["Duties & Roles","duties_roles"],["Responsibilities","responsibilities"],
-  ["KCSE Year","kcse_year"],["KCSE Grade","kcse_grade"],
-  ["Certificate Name","cert_name"],["Certificate Year","cert_year"],["Certificate Grade","cert_grade"],
-  ["Diploma Name","diploma_name"],["Diploma Year","diploma_year"],["Diploma Grade","diploma_grade"],
-  ["Higher Diploma Name","hdip_name"],["Higher Diploma Year","hdip_year"],["Higher Diploma Grade","hdip_grade"],
-  ["Degree Name","degree_name"],["Degree Year","degree_year"],["Degree Grade","degree_grade"],
-  ["Masters Name","masters_name"],["Masters Year","masters_year"],["Masters Grade","masters_grade"],
-  ["PhD Name","phd_name"],["PhD Year","phd_year"],["PhD Grade","phd_grade"],
-  ["Pedagogy Year","pedagogy_year"],["Pedagogy Grade","pedagogy_grade"],
-  ["ToT Year","tot_year"],["ToT Grade","tot_grade"],
-  ["Supervisory Year","superv_year"],["Supervisory Grade","superv_grade"],
-  ["SLDP Year","sldp_year"],["SLDP Grade","sldp_grade"],
-  ["Retirement Course Year","retire_course_year"],["Retirement Course Grade","retire_course_grade"],
-  ["TVETA Reg No.","tveta_reg_no"],["TVETA Date Registered","tveta_date"],["TVETA Expiry","tveta_expiry"],
-  ["Submitted At","submitted_at"],
+  ["Full Name", "full_name"], ["Email", "email"], ["Gender", "gender"], ["National ID", "national_id"],
+  ["DOB Day", "dob_day"], ["DOB Month", "dob_month"], ["DOB Year", "dob_year"],
+  ["Disability", "disability"], ["Disability Nature", "disability_nature"],
+  ["Job Group", "job_group"], ["Designation", "designation"], ["Department", "department"],
+  ["Personal Number", "personal_number"],
+  ["Appointment Day", "appointment_day"], ["Appointment Month", "appointment_month"], ["Appointment Year", "appointment_year"],
+  ["Retirement/Expiry Day", "retirement_day"], ["Retirement/Expiry Month", "retirement_month"], ["Retirement/Expiry Year", "retirement_year"],
+  ["Duties & Roles", "duties_roles"], ["Responsibilities", "responsibilities"],
+  ["KCSE Year", "kcse_year"], ["KCSE Grade", "kcse_grade"],
+  ["Certificate Name", "cert_name"], ["Certificate Year", "cert_year"], ["Certificate Grade", "cert_grade"],
+  ["Diploma Name", "diploma_name"], ["Diploma Year", "diploma_year"], ["Diploma Grade", "diploma_grade"],
+  ["Higher Diploma Name", "hdip_name"], ["Higher Diploma Year", "hdip_year"], ["Higher Diploma Grade", "hdip_grade"],
+  ["Degree Name", "degree_name"], ["Degree Year", "degree_year"], ["Degree Grade", "degree_grade"],
+  ["Masters Name", "masters_name"], ["Masters Year", "masters_year"], ["Masters Grade", "masters_grade"],
+  ["PhD Name", "phd_name"], ["PhD Year", "phd_year"], ["PhD Grade", "phd_grade"],
+  ["Pedagogy Year", "pedagogy_year"], ["Pedagogy Grade", "pedagogy_grade"],
+  ["ToT Year", "tot_year"], ["ToT Grade", "tot_grade"],
+  ["Supervisory Year", "superv_year"], ["Supervisory Grade", "superv_grade"],
+  ["Senior Management Year", "senior_mgmt_year"], ["Senior Management Grade", "senior_mgmt_grade"],
+  ["SLDP Year", "sldp_year"], ["SLDP Grade", "sldp_grade"],
+  ["Retirement Course Year", "retire_course_year"], ["Retirement Course Grade", "retire_course_grade"],
+  ["Other Courses", "other_courses"],
+  ["TVETA Reg No.", "tveta_reg_no"], ["TVETA Date Registered", "tveta_date"], ["TVETA Expiry", "tveta_expiry"],
+  ["Submitted At", "submitted_at"],
 ];
 
 const C = {
@@ -172,6 +197,11 @@ textarea { min-height: 80px; resize: vertical; }
 .password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; padding: 6px; color: ${C.muted}; transition: all 0.2s; touch-action: manipulation; }
 .password-toggle:active { transform: translateY(-50%) scale(0.95); }
 
+/* Toast Notification */
+.toast-notification { position: fixed; bottom: 20px; right: 20px; z-index: 2000; animation: slideInRight 0.3s ease; }
+.toast-success { background: ${C.success}; color: #fff; padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif; font-size: 0.85rem; font-weight: 500; }
+.toast-error { background: ${C.danger}; color: #fff; padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif; font-size: 0.85rem; font-weight: 500; }
+
 /* Mobile Records Cards */
 .rec-card { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 12px; padding: 0.875rem; margin-bottom: 0.75rem; }
 .rec-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
@@ -223,6 +253,11 @@ textarea { min-height: 80px; resize: vertical; }
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 480px) {
   .header-logo img { width: 32px; height: 32px; }
@@ -243,6 +278,8 @@ textarea { min-height: 80px; resize: vertical; }
   .filter-group { min-width: 100%; }
   .search-wrap { min-width: 100%; }
   .btn-ghost { padding: 5px 10px; font-size: 0.7rem; }
+  .toast-notification { bottom: 10px; right: 10px; left: 10px; }
+  .toast-success, .toast-error { justify-content: center; }
 }
 
 @media (max-width: 768px) {
@@ -305,47 +342,63 @@ textarea { min-height: 80px; resize: vertical; }
 `;
 
 const emptyForm = () => ({
-  fullName:"", email:"", gender:"", nationalId:"", dobDay:"", dobMonth:"", dobYear:"",
-  jobGroup:"", disability:"", disabilityNature:"",
-  appointmentDay:"", appointmentMonth:"", appointmentYear:"",
-  retirementDay:"", retirementMonth:"", retirementYear:"",
-  designation:"", department:"", dutiesRoles:"", responsibilities:"",
-  kcseYear:"", kcseGrade:"",
-  certName:"", certYear:"", certGrade:"",
-  diplomaName:"", diplomaYear:"", diplomaGrade:"",
-  hdipName:"", hdipYear:"", hdipGrade:"",
-  degreeName:"", degreeYear:"", degreeGrade:"",
-  mastersName:"", mastersYear:"", mastersGrade:"",
-  phdName:"", phdYear:"", phdGrade:"",
-  pedagogyYear:"", pedagogyGrade:"",
-  totYear:"", totGrade:"",
-  supervYear:"", supervGrade:"",
-  sldpYear:"", sldpGrade:"",
-  retireCourseYear:"", retireCourseGrade:"",
-  tvetaDate:"", tvetaExpiry:"", tvetaRegNo:"",
+  fullName: "", email: "", gender: "", nationalId: "", dobDay: "", dobMonth: "", dobYear: "",
+  jobGroup: "", disability: "", disabilityNature: "",
+  appointmentDay: "", appointmentMonth: "", appointmentYear: "",
+  retirementDay: "", retirementMonth: "", retirementYear: "",
+  designation: "", department: "", dutiesRoles: "", responsibilities: "",
+  personalNumber: "",
+  kcseYear: "", kcseGrade: "",
+  certName: "", certYear: "", certGrade: "",
+  diplomaName: "", diplomaYear: "", diplomaGrade: "",
+  hdipName: "", hdipYear: "", hdipGrade: "",
+  degreeName: "", degreeYear: "", degreeGrade: "",
+  mastersName: "", mastersYear: "", mastersGrade: "",
+  phdName: "", phdYear: "", phdGrade: "",
+  pedagogyYear: "", pedagogyGrade: "",
+  totYear: "", totGrade: "",
+  supervYear: "", supervGrade: "",
+  seniorMgmtYear: "", seniorMgmtGrade: "",
+  sldpYear: "", sldpGrade: "",
+  retireCourseYear: "", retireCourseGrade: "",
+  otherCourses: [],  // will hold array of { desc, year, grade }
+  tvetaDate: "", tvetaExpiry: "", tvetaRegNo: "",
 });
 
 function DateFields({ prefix, label, form, onChange, required }) {
-  const s = (k, v) => onChange(prefix + k, v);
+  const dateValue = formatDateString(form[prefix + "Day"], form[prefix + "Month"], form[prefix + "Year"]);
+
+  const handleDateChange = (e) => {
+    const val = e.target.value;
+    if (!val) {
+      onChange(prefix + "Day", "");
+      onChange(prefix + "Month", "");
+      onChange(prefix + "Year", "");
+      return;
+    }
+    const { day, month, year } = parseDateString(val);
+    onChange(prefix + "Day", day);
+    onChange(prefix + "Month", month);
+    onChange(prefix + "Year", year);
+  };
+
   return (
     <div className="field">
       <label className="label"><FaCalendarAlt size={12} /> {label}{required && " *"}</label>
-      <div className="date-row">
-        <input className="date-dd" placeholder="DD" type="number" min={1} max={31} value={form[prefix+"Day"] || ""} onChange={e=>s("Day",e.target.value)} />
-        <select className="date-mm" value={form[prefix+"Month"] || ""} onChange={e=>s("Month",e.target.value)}>
-          <option value="">Month</option>
-          {MONTHS.map(m=><option key={m}>{m}</option>)}
-        </select>
-        <input className="date-yy" placeholder="YYYY" type="number" value={form[prefix+"Year"] || ""} onChange={e=>s("Year",e.target.value)} />
-      </div>
+      <input
+        type="date"
+        value={dateValue}
+        onChange={handleDateChange}
+        style={{ fontFamily: "sans-serif" }}
+      />
     </div>
   );
 }
 
 // ── PRINT RECORD COMPONENT ──
 function PrintRecord({ r }) {
-  const fmtDate = (d,m,y) => [d,m,y].filter(Boolean).join(" ");
-  const row = (k,v) => v ? (
+  const fmtDate = (d, m, y) => [d, m, y].filter(Boolean).join(" ");
+  const row = (k, v) => v ? (
     <div className="print-row" key={k}>
       <span className="print-key">{k}</span>
       <span className="print-val">{v}</span>
@@ -355,7 +408,7 @@ function PrintRecord({ r }) {
   return (
     <div className="print-only print-page" id="print-record">
       <div className="print-header">
-        <img src={LOGO} alt="NYS"/>
+        <img src={LOGO} alt="NYS" />
         <div className="print-header-text">
           <h1>National Youth Service Engineering Institute</h1>
           <p>Staff Personal Record — Confidential</p>
@@ -364,25 +417,26 @@ function PrintRecord({ r }) {
 
       <div className="print-name-bar">
         <h2>{r.full_name}</h2>
-        <span>Printed: {new Date().toLocaleDateString("en-KE",{day:"2-digit",month:"long",year:"numeric"})}</span>
+        <span>Printed: {new Date().toLocaleDateString("en-KE", { day: "2-digit", month: "long", year: "numeric" })}</span>
       </div>
 
       <div className="print-badges">
         {r.designation && <span className="print-badge">{r.designation}</span>}
-        {r.department  && <span className="print-badge">{r.department}</span>}
-        {r.job_group   && <span className="print-badge">Job Group: {r.job_group}</span>}
+        {r.department && <span className="print-badge">{r.department}</span>}
+        {r.job_group && <span className="print-badge">Job Group: {r.job_group}</span>}
+        {r.personal_number && <span className="print-badge">Personal No: {r.personal_number}</span>}
         {r.tveta_reg_no && <span className="print-badge">TVETA: {r.tveta_reg_no}</span>}
       </div>
 
       <div className="print-section">
         <div className="print-section-title">Personal Information</div>
         <div className="print-grid">
-          {row("Full Name",         r.full_name)}
-          {row("Email",             r.email)}
-          {row("Gender",            r.gender)}
-          {row("National ID No.",   r.national_id)}
-          {row("Date of Birth",     fmtDate(r.dob_day,r.dob_month,r.dob_year))}
-          {row("Disability",        r.disability)}
+          {row("Full Name", r.full_name)}
+          {row("Email", r.email)}
+          {row("Gender", r.gender)}
+          {row("National ID No.", r.national_id)}
+          {row("Date of Birth", fmtDate(r.dob_day, r.dob_month, r.dob_year))}
+          {row("Disability", r.disability)}
           {row("Disability Nature", r.disability_nature)}
         </div>
       </div>
@@ -390,11 +444,12 @@ function PrintRecord({ r }) {
       <div className="print-section">
         <div className="print-section-title">Employment Details</div>
         <div className="print-grid">
-          {row("Designation",       r.designation)}
-          {row("Department",        r.department)}
-          {row("Job Group",         r.job_group)}
-          {row("Date of Appointment", fmtDate(r.appointment_day,r.appointment_month,r.appointment_year))}
-          {row("Retirement / Expiry", fmtDate(r.retirement_day,r.retirement_month,r.retirement_year))}
+          {row("Designation", r.designation)}
+          {row("Department", r.department)}
+          {row("Personal Number", r.personal_number)}
+          {row("Job Group", r.job_group)}
+          {row("Date of Appointment", fmtDate(r.appointment_day, r.appointment_month, r.appointment_year))}
+          {row("Retirement / Expiry", fmtDate(r.retirement_day, r.retirement_month, r.retirement_year))}
         </div>
         {r.duties_roles && <div className="print-row"><span className="print-key">Duties & Roles</span><span className="print-val">{r.duties_roles}</span></div>}
         {r.responsibilities && <div className="print-row"><span className="print-key">Responsibilities</span><span className="print-val">{r.responsibilities}</span></div>}
@@ -403,34 +458,44 @@ function PrintRecord({ r }) {
       <div className="print-section">
         <div className="print-section-title">Academic Qualifications</div>
         <div className="print-grid">
-          {row("KCSE",         r.kcse_year?`${r.kcse_year} — Grade: ${r.kcse_grade}`:"")}
-          {row("Certificate",  r.cert_name?`${r.cert_name} (${r.cert_year}) — ${r.cert_grade}`:"")}
-          {row("Diploma",      r.diploma_name?`${r.diploma_name} (${r.diploma_year}) — ${r.diploma_grade}`:"")}
-          {row("Higher Diploma",r.hdip_name?`${r.hdip_name} (${r.hdip_year}) — ${r.hdip_grade}`:"")}
-          {row("Degree",       r.degree_name?`${r.degree_name} (${r.degree_year}) — ${r.degree_grade}`:"")}
-          {row("Masters",      r.masters_name?`${r.masters_name} (${r.masters_year}) — ${r.masters_grade}`:"")}
-          {row("PhD",          r.phd_name?`${r.phd_name} (${r.phd_year}) — ${r.phd_grade}`:"")}
+          {row("KCSE", r.kcse_year ? `${r.kcse_year} — Grade: ${r.kcse_grade}` : "")}
+          {row("Certificate", r.cert_name ? `${r.cert_name} (${r.cert_year}) — ${r.cert_grade}` : "")}
+          {row("Diploma", r.diploma_name ? `${r.diploma_name} (${r.diploma_year}) — ${r.diploma_grade}` : "")}
+          {row("Higher Diploma", r.hdip_name ? `${r.hdip_name} (${r.hdip_year}) — ${r.hdip_grade}` : "")}
+          {row("Degree", r.degree_name ? `${r.degree_name} (${r.degree_year}) — ${r.degree_grade}` : "")}
+          {row("Masters", r.masters_name ? `${r.masters_name} (${r.masters_year}) — ${r.masters_grade}` : "")}
+          {row("PhD", r.phd_name ? `${r.phd_name} (${r.phd_year}) — ${r.phd_grade}` : "")}
         </div>
       </div>
 
       <div className="print-section">
         <div className="print-section-title">Professional Development</div>
         <div className="print-grid">
-          {row("Pedagogy",      r.pedagogy_year?`${r.pedagogy_year} — ${r.pedagogy_grade}`:"")}
-          {row("ToT",           r.tot_year?`${r.tot_year} — ${r.tot_grade}`:"")}
-          {row("Supervisory",   r.superv_year?`${r.superv_year} — ${r.superv_grade}`:"")}
-          {row("SLDP",          r.sldp_year?`${r.sldp_year} — ${r.sldp_grade}`:"")}
-          {row("Retirement Course",r.retire_course_year?`${r.retire_course_year} — ${r.retire_course_grade}`:"")}
+          {row("Pedagogy", r.pedagogy_year ? `${r.pedagogy_year} — ${r.pedagogy_grade}` : "")}
+          {row("ToT", r.tot_year ? `${r.tot_year} — ${r.tot_grade}` : "")}
+          {row("Supervisory", r.superv_year ? `${r.superv_year} — ${r.superv_grade}` : "")}
+          {row("Senior Management", r.senior_mgmt_year ? `${r.senior_mgmt_year} — ${r.senior_mgmt_grade}` : "")}
+          {row("SLDP", r.sldp_year ? `${r.sldp_year} — ${r.sldp_grade}` : "")}
+          {row("Retirement Course", r.retire_course_year ? `${r.retire_course_year} — ${r.retire_course_grade}` : "")}
+          {(() => {
+            try {
+              const courses = JSON.parse(r.other_courses || "[]");
+              return courses.map((c, i) => row(
+                `Other Course ${i + 1}`,
+                c.desc ? `${c.desc}${c.year ? ` (${c.year})` : ""}${c.grade ? ` — ${c.grade}` : ""}` : ""
+              ));
+            } catch { return null; }
+          })()}
         </div>
       </div>
 
-      {(r.tveta_reg_no||r.tveta_date||r.tveta_expiry) && (
+      {(r.tveta_reg_no || r.tveta_date || r.tveta_expiry) && (
         <div className="print-section">
           <div className="print-section-title">TVETA Registration</div>
           <div className="print-grid">
             {row("Registration No.", r.tveta_reg_no)}
-            {row("Date Registered",  r.tveta_date)}
-            {row("Expiry Date",      r.tveta_expiry)}
+            {row("Date Registered", r.tveta_date)}
+            {row("Expiry Date", r.tveta_expiry)}
           </div>
         </div>
       )}
@@ -438,6 +503,25 @@ function PrintRecord({ r }) {
       <div className="print-footer">
         <span>National Youth Service Engineering Institute — Staff Data Platform</span>
         <span>Record ID: {r.id} | Submitted: {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-KE") : "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+// Toast Notification Component
+function Toast({ message, type, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="toast-notification">
+      <div className={type === 'success' ? 'toast-success' : 'toast-error'}>
+        {type === 'success' ? <FaRegCheckCircle size={20} /> : <FaExclamationTriangle size={20} />}
+        {message}
       </div>
     </div>
   );
@@ -477,53 +561,56 @@ function DataForm() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSubmission, setPendingSubmission] = useState(null);
-  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const inp = k => ({ value: form[k] || "", onChange: e => set(k, e.target.value) });
-  const isPartTime = ["Part Time Lecturer","Intern","Teaching Practice"].includes(form.designation);
+  const isPartTime = ["Part Time Lecturer", "Intern", "Teaching Practice"].includes(form.designation);
 
   const validate = () => {
     const e = {};
-    if (step===0) {
-      if (!form.fullName?.trim()) e.fullName="Required";
-      if (!form.email?.trim()) e.email="Required";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email="Invalid email format";
-      if (!form.gender) e.gender="Required";
-      if (!form.nationalId?.trim()) e.nationalId="Required";
+    if (step === 0) {
+      if (!form.fullName?.trim()) e.fullName = "Required";
+      if (!form.email?.trim()) e.email = "Required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email format";
+      if (!form.gender) e.gender = "Required";
+      if (!form.nationalId?.trim()) e.nationalId = "Required";
     }
-    if (step===1) {
-      if (!form.designation) e.designation="Required";
-      if (!form.department) e.department="Required";
+    if (step === 1) {
+      if (!form.designation) e.designation = "Required";
+      if (!form.department) e.department = "Required";
+      if (["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation)) {
+        if (!form.personalNumber?.trim()) e.personalNumber = "Required";
+      }
     }
     setErrors(e);
-    return Object.keys(e).length===0;
+    return Object.keys(e).length === 0;
   };
 
-  const next = () => { if(validate()) setStep(s=>Math.min(s+1,4)); };
-  const back = () => setStep(s=>Math.max(s-1,0));
+  const next = () => { if (validate()) setStep(s => Math.min(s + 1, 4)); };
+  const back = () => setStep(s => Math.max(s - 1, 0));
 
   const checkExistingAndSubmit = async () => {
     setSubmitting(true);
-    
-    const { data: existing } = await supabase
+
+    const { data: existing, error } = await supabase
       .from("staff_submissions")
       .select("national_id, submitted_count")
       .eq("national_id", form.nationalId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to avoid error when no record found
 
-    if (existing) {
+    if (existing && !error) {
       setPendingSubmission(existing);
       setShowConfirmModal(true);
       setSubmitting(false);
       return;
     }
-    
+
     await performSubmit();
   };
 
   const performSubmit = async () => {
     setSubmitting(true);
     setShowConfirmModal(false);
-    
+
     const dbRecord = {
       full_name: form.fullName,
       email: form.email,
@@ -543,6 +630,7 @@ function DataForm() {
       retirement_year: form.retirementYear,
       designation: form.designation,
       department: form.department,
+      personal_number: ["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation) ? form.personalNumber : null,
       duties_roles: form.dutiesRoles,
       responsibilities: form.responsibilities,
       kcse_year: form.kcseYear,
@@ -571,13 +659,17 @@ function DataForm() {
       tot_grade: form.totGrade,
       superv_year: form.supervYear,
       superv_grade: form.supervGrade,
+      senior_mgmt_year: form.seniorMgmtYear,
+      senior_mgmt_grade: form.seniorMgmtGrade,
       sldp_year: form.sldpYear,
       sldp_grade: form.sldpGrade,
       retire_course_year: form.retireCourseYear,
       retire_course_grade: form.retireCourseGrade,
+      other_courses: form.otherCourses?.length ? JSON.stringify(form.otherCourses) : null,
       tveta_date: form.tvetaDate,
       tveta_expiry: form.tvetaExpiry,
       tveta_reg_no: form.tvetaRegNo,
+      personal_number: ["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation) ? form.personalNumber : null,
       submitted_at: new Date().toISOString(),
       submitted_count: pendingSubmission ? (pendingSubmission.submitted_count || 0) + 1 : 1
     };
@@ -610,15 +702,15 @@ function DataForm() {
 
   if (submitted) return (
     <div className="container">
-      <div className="card" style={{textAlign:"center", padding:"2.5rem 1.5rem"}}>
-        <div style={{fontSize:52, marginBottom:"1rem", color:C.success}}>
+      <div className="card" style={{ textAlign: "center", padding: "2.5rem 1.5rem" }}>
+        <div style={{ marginBottom: "1rem", color: C.success }}>
           <FaRegCheckCircle size={52} />
         </div>
-        <h2 style={{fontFamily:"sans-serif", color:C.success, marginBottom:6}}>Submission Received</h2>
-        <p style={{fontFamily:"sans-serif", color:C.muted, marginBottom:"1.5rem"}}>
+        <h2 style={{ fontFamily: "sans-serif", color: C.success, marginBottom: 6 }}>Submission Received</h2>
+        <p style={{ fontFamily: "sans-serif", color: C.muted, marginBottom: "1.5rem" }}>
           Thank you, <strong>{form.fullName}</strong>. Your data has been recorded successfully.
         </p>
-        <button className="btn" onClick={()=>{setForm(emptyForm());setStep(0);setSubmitted(false);}}>
+        <button className="btn" onClick={() => { setForm(emptyForm()); setStep(0); setSubmitted(false); }}>
           Submit Another Response
         </button>
       </div>
@@ -627,7 +719,7 @@ function DataForm() {
 
   return (
     <div className="container">
-      <CustomAlertModal 
+      <CustomAlertModal
         isOpen={showConfirmModal}
         onClose={() => { setShowConfirmModal(false); setPendingSubmission(null); }}
         onConfirm={performSubmit}
@@ -635,47 +727,47 @@ function DataForm() {
         message={`A submission with National ID "${form.nationalId}" already exists. This will UPDATE your previous submission. Do you want to continue?`}
         type="warning"
       />
-      
+
       <div className="card">
-        <div style={{marginBottom:"1.25rem"}}>
-          <h1 style={{fontFamily:"sans-serif", fontSize:"1.25rem", color:C.primary, marginBottom:4}}>
+        <div style={{ marginBottom: "1.25rem" }}>
+          <h1 style={{ fontFamily: "sans-serif", fontSize: "1.25rem", color: C.primary, marginBottom: 4 }}>
             Staff Data Collection Form
           </h1>
-          <p style={{fontFamily:"sans-serif", fontSize:"0.8rem", color:C.muted}}>
+          <p style={{ fontFamily: "sans-serif", fontSize: "0.8rem", color: C.muted }}>
             National Youth Service Engineering Institute — Please complete all applicable fields accurately.
           </p>
         </div>
 
         <div className="steps">
-          {STEPS.map((s,i)=>(
-            <div key={i} className={"step-item " + (i===step?"step-active":i<step?"step-done":"step-idle")}>
-              {i<step ? <FaCheck size={10} /> : ""}{s}
+          {STEPS.map((s, i) => (
+            <div key={i} className={"step-item " + (i === step ? "step-active" : i < step ? "step-done" : "step-idle")}>
+              {i < step ? <FaCheck size={10} /> : ""}{s}
             </div>
           ))}
         </div>
 
-        {step===0 && <>
+        {step === 0 && <>
           <div className="sec-title"><FaUser size={12} /> Personal Information</div>
           <div className="grid-2">
             <div className="field">
               <label className="label"><FaUser size={12} /> Full Name *</label>
-              <input {...inp("fullName")} style={{borderColor:errors.fullName?C.danger:C.border}} />
-              {errors.fullName && <span style={{color:C.danger,fontSize:"0.72rem"}}>{errors.fullName}</span>}
+              <input {...inp("fullName")} style={{ borderColor: errors.fullName ? C.danger : C.border }} />
+              {errors.fullName && <span style={{ color: C.danger, fontSize: "0.72rem" }}>{errors.fullName}</span>}
             </div>
             <div className="field">
               <label className="label"><FaEnvelope size={12} /> Email Address *</label>
-              <input type="email" {...inp("email")} style={{borderColor:errors.email?C.danger:C.border}} />
-              {errors.email && <span style={{color:C.danger,fontSize:"0.72rem"}}>{errors.email}</span>}
+              <input type="email" {...inp("email")} style={{ borderColor: errors.email ? C.danger : C.border }} />
+              {errors.email && <span style={{ color: C.danger, fontSize: "0.72rem" }}>{errors.email}</span>}
             </div>
           </div>
           <div className="grid-2">
             <div className="field">
               <label className="label"><FaIdCard size={12} /> National ID No. *</label>
-              <input {...inp("nationalId")} style={{borderColor:errors.nationalId?C.danger:C.border}} />
+              <input {...inp("nationalId")} style={{ borderColor: errors.nationalId ? C.danger : C.border }} />
             </div>
             <div className="field">
               <label className="label">Gender *</label>
-              <select {...inp("gender")} style={{borderColor:errors.gender?C.danger:C.border}}>
+              <select {...inp("gender")} style={{ borderColor: errors.gender ? C.danger : C.border }}>
                 <option value="">Select…</option><option>Male</option><option>Female</option>
               </select>
             </div>
@@ -689,44 +781,51 @@ function DataForm() {
               </select>
             </div>
           </div>
-          {form.disability==="Yes" && <div className="field">
+          {form.disability === "Yes" && <div className="field">
             <label className="label">Nature of Disability</label>
             <input {...inp("disabilityNature")} placeholder="Describe…" />
           </div>}
         </>}
 
-        {step===1 && <>
+        {step === 1 && <>
           <div className="sec-title"><FaBriefcase size={12} /> Employment Details</div>
           <div className="grid-2">
             <div className="field">
               <label className="label">Designation *</label>
-              <select {...inp("designation")} style={{borderColor:errors.designation?C.danger:C.border}}>
+              <select {...inp("designation")} style={{ borderColor: errors.designation ? C.danger : C.border }}>
                 <option value="">Select…</option>
-                {DESIGNATIONS.map(d=><option key={d}>{d}</option>)}
+                {DESIGNATIONS.map(d => <option key={d}>{d}</option>)}
               </select>
             </div>
             <div className="field">
               <label className="label">Department *</label>
-              <select {...inp("department")} style={{borderColor:errors.department?C.danger:C.border}}>
+              <select {...inp("department")} style={{ borderColor: errors.department ? C.danger : C.border }}>
                 <option value="">Select…</option>
-                {DEPARTMENTS.map(d=><option key={d}>{d}</option>)}
+                {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
               </select>
             </div>
           </div>
+          {["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation) && (
+            <div className="field" style={{ marginBottom: "1rem" }}>
+              <label className="label">Personal Number *</label>
+              <input {...inp("personalNumber")} placeholder="e.g. PN-12345" style={{ borderColor: errors.personalNumber ? C.danger : C.border }} />
+              {errors.personalNumber && <span style={{ color: C.danger, fontSize: "0.72rem" }}>{errors.personalNumber}</span>}
+            </div>
+          )}
           <div className="grid-2">
             {!isPartTime && <div className="field">
               <label className="label">Job Group</label>
               <select {...inp("jobGroup")}>
                 <option value="">Select…</option>
-                {JOB_GROUPS.map(g=><option key={g}>Group {g}</option>)}
+                {JOB_GROUPS.map(g => <option key={g}>Group {g}</option>)}
               </select>
             </div>}
             <DateFields prefix="appointment" label="Date of Appointment" form={form} onChange={set} />
           </div>
           <div className="grid-2">
-            <DateFields prefix="retirement" label={isPartTime?"Contract Expiry":"Date of Retirement"} form={form} onChange={set} />
+            <DateFields prefix="retirement" label={isPartTime ? "Contract Expiry" : "Date of Retirement"} form={form} onChange={set} />
           </div>
-          <div className="field" style={{marginBottom:"1rem"}}>
+          <div className="field" style={{ marginBottom: "1rem" }}>
             <label className="label">Duties & Roles (e.g. HOD, Deputy HOD, Internal Verifier)</label>
             <input {...inp("dutiesRoles")} placeholder="e.g. HOD, Deputy HOD, Internal Verifier" />
           </div>
@@ -736,63 +835,136 @@ function DataForm() {
           </div>
         </>}
 
-        {step===2 && <>
+        {step === 2 && <>
           <div className="sec-title"><FaBook size={12} /> Academic Qualifications</div>
-          <p style={{fontFamily:"sans-serif",fontSize:"0.78rem",color:C.muted,marginBottom:"1rem"}}>Fill only qualifications you hold. Leave blank if not applicable.</p>
+          <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: "1rem" }}>Fill only qualifications you hold. Leave blank if not applicable.</p>
           {[
-            {label:"KCSE", prefix:"kcse", noName:true},
-            {label:"Certificate", prefix:"cert"},
-            {label:"Diploma", prefix:"diploma"},
-            {label:"Higher Diploma", prefix:"hdip"},
-            {label:"Degree", prefix:"degree"},
-            {label:"Masters", prefix:"masters"},
-            {label:"PhD", prefix:"phd"},
-          ].map(({label,prefix,noName})=>(
-            <div key={prefix} style={{borderBottom:`1px solid ${C.border}`,paddingBottom:"0.75rem",marginBottom:"0.75rem"}}>
+            { label: "KCSE", prefix: "kcse", noName: true },
+            { label: "Certificate", prefix: "cert" },
+            { label: "Diploma", prefix: "diploma" },
+            { label: "Higher Diploma", prefix: "hdip" },
+            { label: "Degree", prefix: "degree" },
+            { label: "Masters", prefix: "masters" },
+            { label: "PhD", prefix: "phd" },
+          ].map(({ label, prefix, noName }) => (
+            <div key={prefix} style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
               <div className="qual-label"><FaGraduationCap size={10} /> {label}</div>
               <div className="qual-row">
                 {!noName && <div className={"field qual-name"}>
                   <label className="label">Name / Institution</label>
-                  <input value={form[prefix+"Name"] || ""} onChange={e=>set(prefix+"Name",e.target.value)} />
+                  <input value={form[prefix + "Name"] || ""} onChange={e => set(prefix + "Name", e.target.value)} />
                 </div>}
                 <div className="field">
                   <label className="label">Year</label>
-                  <input type="number" placeholder="YYYY" value={form[prefix+"Year"] || ""} onChange={e=>set(prefix+"Year",e.target.value)} />
+                  <input type="number" placeholder="YYYY" value={form[prefix + "Year"] || ""} onChange={e => set(prefix + "Year", e.target.value)} />
                 </div>
                 <div className="field">
                   <label className="label">Grade / Score</label>
-                  <input value={form[prefix+"Grade"] || ""} onChange={e=>set(prefix+"Grade",e.target.value)} />
+                  <input value={form[prefix + "Grade"] || ""} onChange={e => set(prefix + "Grade", e.target.value)} />
                 </div>
               </div>
             </div>
           ))}
         </>}
 
-        {step===3 && <>
+        {step === 3 && <>
           <div className="sec-title"><FaChalkboardTeacher size={12} /> Professional Development</div>
-          <p style={{fontFamily:"sans-serif",fontSize:"0.78rem",color:C.muted,marginBottom:"1rem"}}>Complete only trainings/courses you have undertaken.</p>
+          <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: "1rem" }}>Complete only trainings/courses you have undertaken.</p>
+
           {[
-            {label:"Pedagogy", yk:"pedagogyYear", gk:"pedagogyGrade"},
-            {label:"Training of Trainers (ToT)", yk:"totYear", gk:"totGrade"},
-            {label:"Supervisory Course", yk:"supervYear", gk:"supervGrade"},
-            {label:"SLDP", yk:"sldpYear", gk:"sldpGrade"},
-            {label:"Retirement Course", yk:"retireCourseYear", gk:"retireCourseGrade"},
-          ].map(({label,yk,gk})=>(
-            <div key={yk} style={{borderBottom:`1px solid ${C.border}`,paddingBottom:"0.75rem",marginBottom:"0.75rem"}}>
+            { label: "Pedagogy", yk: "pedagogyYear", gk: "pedagogyGrade" },
+            { label: "Training of Trainers (ToT)", yk: "totYear", gk: "totGrade" },
+            { label: "Supervisory Course", yk: "supervYear", gk: "supervGrade" },
+            { label: "Senior Management", yk: "seniorMgmtYear", gk: "seniorMgmtGrade" },
+            { label: "SLDP", yk: "sldpYear", gk: "sldpGrade" },
+            { label: "Retirement Course", yk: "retireCourseYear", gk: "retireCourseGrade" },
+          ].map(({ label, yk, gk }) => (
+            <div key={yk} style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
               <div className="qual-label"><FaCertificate size={10} /> {label}</div>
-              <div className="grid-2" style={{marginBottom:0}}>
+              <div className="grid-2" style={{ marginBottom: 0 }}>
                 <div className="field">
                   <label className="label">Year</label>
-                  <input type="number" placeholder="YYYY" value={form[yk] || ""} onChange={e=>set(yk,e.target.value)} />
+                  <input type="number" placeholder="YYYY" value={form[yk] || ""} onChange={e => set(yk, e.target.value)} />
                 </div>
                 <div className="field">
                   <label className="label">Grade / Score</label>
-                  <input value={form[gk] || ""} onChange={e=>set(gk,e.target.value)} />
+                  <input value={form[gk] || ""} onChange={e => set(gk, e.target.value)} />
                 </div>
               </div>
             </div>
           ))}
-          <div className="sec-title" style={{marginTop:"1.5rem"}}><FaCertificate size={12} /> TVETA Registration</div>
+
+          {/* Any Other Courses — dynamic list */}
+          <div style={{ marginBottom: "0.75rem" }}>
+            <div className="qual-label"><FaCertificate size={10} /> Any Other Course(s)</div>
+
+            {(form.otherCourses || []).map((course, index) => (
+              <div key={index} style={{ background: C.light, borderRadius: 8, padding: "0.75rem", marginBottom: "0.6rem", border: `1px solid ${C.border}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                  <span style={{ fontFamily: "sans-serif", fontSize: "0.75rem", fontWeight: 700, color: C.primary }}>
+                    Course {index + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => set("otherCourses", form.otherCourses.filter((_, i) => i !== index))}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: C.danger, display: "flex", alignItems: "center", gap: 4, fontFamily: "sans-serif", fontSize: "0.75rem" }}
+                  >
+                    <FaTrash size={10} /> Remove
+                  </button>
+                </div>
+                <div className="field" style={{ marginBottom: "0.5rem" }}>
+                  <label className="label">Course Name / Description</label>
+                  <input
+                    value={course.desc || ""}
+                    onChange={e => {
+                      const updated = [...form.otherCourses];
+                      updated[index] = { ...updated[index], desc: e.target.value };
+                      set("otherCourses", updated);
+                    }}
+                    placeholder="e.g. Project Management, Leadership Training…"
+                  />
+                </div>
+                <div className="grid-2" style={{ marginBottom: 0 }}>
+                  <div className="field">
+                    <label className="label">Year</label>
+                    <input
+                      type="number"
+                      placeholder="YYYY"
+                      value={course.year || ""}
+                      onChange={e => {
+                        const updated = [...form.otherCourses];
+                        updated[index] = { ...updated[index], year: e.target.value };
+                        set("otherCourses", updated);
+                      }}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Grade / Score</label>
+                    <input
+                      value={course.grade || ""}
+                      onChange={e => {
+                        const updated = [...form.otherCourses];
+                        updated[index] = { ...updated[index], grade: e.target.value };
+                        set("otherCourses", updated);
+                      }}
+                      placeholder="e.g. Pass / 78%"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="btn-outline"
+              style={{ fontSize: "0.78rem", padding: "6px 14px" }}
+              onClick={() => set("otherCourses", [...(form.otherCourses || []), { desc: "", year: "", grade: "" }])}
+            >
+              <FaPlus size={10} /> Add Course
+            </button>
+          </div>
+
+          <div className="sec-title" style={{ marginTop: "1.5rem" }}><FaCertificate size={12} /> TVETA Registration</div>
           <div className="grid-3">
             <div className="field">
               <label className="label">Date of Registration</label>
@@ -809,35 +981,59 @@ function DataForm() {
           </div>
         </>}
 
-        {step===4 && <>
+        {/* Review Step */}
+        {step === 4 && <>
           <div className="sec-title"><FaClipboardList size={12} /> Review Your Submission</div>
           <div className="alert-success"><FaCheck size={14} /> Please confirm your details below before submitting.</div>
           {[
-            ["Full Name", form.fullName],["Email", form.email],["Gender", form.gender],["National ID", form.nationalId],
-            ["Date of Birth", [form.dobDay,form.dobMonth,form.dobYear].filter(Boolean).join(" ")],
-            ["Designation", form.designation],["Department", form.department],
-            ["Job Group", form.jobGroup||"N/A"],["Disability", form.disability||"Not stated"],
-            ["Appointment", [form.appointmentDay,form.appointmentMonth,form.appointmentYear].filter(Boolean).join(" ")],
-            ["Retirement/Expiry", [form.retirementDay,form.retirementMonth,form.retirementYear].filter(Boolean).join(" ")],
-            ["Duties/Roles", form.dutiesRoles||"—"],
-            ["Degree", form.degreeName?`${form.degreeName} (${form.degreeYear})`:"—"],
-            ["Masters", form.mastersName?`${form.mastersName} (${form.mastersYear})`:"—"],
-            ["TVETA Reg No.", form.tvetaRegNo||"—"],
-          ].map(([k,v])=>(
+            ["Full Name", form.fullName],
+            ["Email", form.email],
+            ["Gender", form.gender],
+            ["National ID", form.nationalId],
+            ["Date of Birth", [form.dobDay, form.dobMonth, form.dobYear].filter(Boolean).join(" ")],
+            ["Designation", form.designation],
+            ["Department", form.department],
+            ["Personal Number", ["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation) ? form.personalNumber : null],
+            ["Job Group", form.jobGroup || "N/A"],
+            ["Disability", form.disability || "Not stated"],
+            ["Appointment", [form.appointmentDay, form.appointmentMonth, form.appointmentYear].filter(Boolean).join(" ")],
+            ["Retirement/Expiry", [form.retirementDay, form.retirementMonth, form.retirementYear].filter(Boolean).join(" ")],
+            ["Duties/Roles", form.dutiesRoles || "—"],
+            ["KCSE", form.kcseYear ? `${form.kcseYear} — ${form.kcseGrade}` : null],
+            ["Certificate", form.certName ? `${form.certName} (${form.certYear}) — ${form.certGrade}` : null],
+            ["Diploma", form.diplomaName ? `${form.diplomaName} (${form.diplomaYear}) — ${form.diplomaGrade}` : null],
+            ["Higher Diploma", form.hdipName ? `${form.hdipName} (${form.hdipYear}) — ${form.hdipGrade}` : null],
+            ["Degree", form.degreeName ? `${form.degreeName} (${form.degreeYear}) — ${form.degreeGrade}` : null],
+            ["Masters", form.mastersName ? `${form.mastersName} (${form.mastersYear}) — ${form.mastersGrade}` : null],
+            ["PhD", form.phdName ? `${form.phdName} (${form.phdYear}) — ${form.phdGrade}` : null],
+            ["Pedagogy", form.pedagogyYear ? `${form.pedagogyYear} — ${form.pedagogyGrade}` : null],
+            ["ToT", form.totYear ? `${form.totYear} — ${form.totGrade}` : null],
+            ["Supervisory", form.supervYear ? `${form.supervYear} — ${form.supervGrade}` : null],
+            ["Senior Management", form.seniorMgmtYear ? `${form.seniorMgmtYear} — ${form.seniorMgmtGrade}` : null],
+            ["SLDP", form.sldpYear ? `${form.sldpYear} — ${form.sldpGrade}` : null],
+            ["Retirement Course", form.retireCourseYear ? `${form.retireCourseYear} — ${form.retireCourseGrade}` : null],
+            ...(form.otherCourses || []).map((c, i) => [
+              `Other Course ${i + 1}`,
+              c.desc ? `${c.desc}${c.year ? ` (${c.year})` : ""}${c.grade ? ` — ${c.grade}` : ""}` : null
+            ]),
+            ["TVETA Reg No.", form.tvetaRegNo || null],
+            ["TVETA Registered", form.tvetaDate || null],
+            ["TVETA Expiry", form.tvetaExpiry || null],
+          ].filter(([_, v]) => v !== null).map(([k, v]) => (
             <div className="rev-row" key={k}>
               <span className="rev-key">{k}</span>
-              <span className="rev-val">{v||"—"}</span>
+              <span className="rev-val">{v || "—"}</span>
             </div>
           ))}
         </>}
 
-        <div style={{display:"flex",justifyContent:"space-between",marginTop:"1.75rem",gap:8}}>
-          {step>0 ? <button className="btn-outline" onClick={back} disabled={submitting}><FaArrowLeft size={12} /> Back</button> : <span/>}
-          {step<4
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1.75rem", gap: 8 }}>
+          {step > 0 ? <button className="btn-outline" onClick={back} disabled={submitting}><FaArrowLeft size={12} /> Back</button> : <span />}
+          {step < 4
             ? <button className="btn" onClick={next}>Continue <FaArrowRight size={12} /></button>
             : <button className="btn-accent" onClick={checkExistingAndSubmit} disabled={submitting}>
-                {submitting ? "Submitting..." : <><FaCheck size={12} /> Submit Form</>}
-              </button>
+              {submitting ? "Submitting..." : <><FaCheck size={12} /> Submit Form</>}
+            </button>
           }
         </div>
       </div>
@@ -876,7 +1072,7 @@ function Login({ onLogin }) {
       }
 
       const isValidPassword = await bcrypt.compare(password, data.password_hash);
-      
+
       if (isValidPassword) {
         onLogin({
           username: data.username,
@@ -895,33 +1091,33 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div style={{minHeight:"calc(100vh - 68px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem 1rem",background:C.bg}}>
-      <div className="card" style={{maxWidth:380,width:"100%",boxShadow:"0 4px 24px rgba(0,0,0,0.08)"}}>
-        <div style={{textAlign:"center",marginBottom:"1.75rem"}}>
-          <img src={LOGO} alt="NYS Logo" style={{width:64,height:64,objectFit:"contain",marginBottom:12}} />
-          <h2 style={{fontFamily:"sans-serif",color:C.primary,marginBottom:4}}>Admin Login</h2>
-          <p style={{fontFamily:"sans-serif",fontSize:"0.78rem",color:C.muted}}>NYSEI Staff Data Platform</p>
+    <div style={{ minHeight: "calc(100vh - 68px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem 1rem", background: C.bg }}>
+      <div className="card" style={{ maxWidth: 380, width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+          <img src={LOGO} alt="NYS Logo" style={{ width: 64, height: 64, objectFit: "contain", marginBottom: 12 }} />
+          <h2 style={{ fontFamily: "sans-serif", color: C.primary, marginBottom: 4 }}>Admin Login</h2>
+          <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted }}>NYSEI Staff Data Platform</p>
         </div>
         {error && <div className="alert-danger"><FaExclamationTriangle size={14} /> {error}</div>}
-        <div className="field" style={{marginBottom:"1rem"}}>
+        <div className="field" style={{ marginBottom: "1rem" }}>
           <label className="label"><FaUser size={12} /> Username</label>
-          <input 
-            value={username} 
-            onChange={e=>{setUsername(e.target.value);setError("");}} 
+          <input
+            value={username}
+            onChange={e => { setUsername(e.target.value); setError(""); }}
             placeholder="Enter username"
             disabled={loading}
           />
         </div>
-        <div className="field" style={{marginBottom:"1.5rem"}}>
+        <div className="field" style={{ marginBottom: "1.5rem" }}>
           <label className="label"><FaLock size={12} /> Password</label>
           <div className="password-wrapper">
-            <input 
-              type={showPassword ? "text" : "password"} 
-              value={password} 
-              onChange={e=>{setPassword(e.target.value);setError("");}} 
-              onKeyDown={e=>e.key==="Enter"&&submit()}
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError(""); }}
+              onKeyDown={e => e.key === "Enter" && submit()}
               disabled={loading}
-              style={{paddingRight:"40px"}}
+              style={{ paddingRight: "40px" }}
             />
             <button
               type="button"
@@ -932,11 +1128,11 @@ function Login({ onLogin }) {
             </button>
           </div>
         </div>
-        <button className="btn" style={{width:"100%"}} onClick={submit} disabled={loading}>
+        <button className="btn" style={{ width: "100%" }} onClick={submit} disabled={loading}>
           {loading ? <FaSpinner className="spin" size={14} /> : <FaLock size={12} />}
           {loading ? " Signing in..." : " Sign In"}
         </button>
-        <p style={{fontFamily:"sans-serif",fontSize:"0.7rem",color:C.muted,textAlign:"center",marginTop:"1rem"}}>
+        <p style={{ fontFamily: "sans-serif", fontSize: "0.7rem", color: C.muted, textAlign: "center", marginTop: "1rem" }}>
           Secure Admin Access Only
         </p>
       </div>
@@ -944,16 +1140,16 @@ function Login({ onLogin }) {
   );
 }
 
-function StatCard({label,value,icon: IconComponent, color, trend, onClick}) {
+function StatCard({ label, value, icon: IconComponent, color, trend, onClick }) {
   return (
-    <div className="stat-card" onClick={onClick} style={{cursor: onClick ? 'pointer' : 'default'}}>
-      <div className="stat-icon" style={{color: color || C.primary}}>
+    <div className="stat-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
+      <div className="stat-icon" style={{ color: color || C.primary }}>
         {IconComponent && <IconComponent size={32} />}
       </div>
-      <div style={{flex:1}}>
+      <div style={{ flex: 1 }}>
         <div className="stat-label">{label}</div>
         <div className="stat-val">{typeof value === 'number' ? value.toLocaleString() : value}</div>
-        {trend && <div style={{fontSize:"0.7rem", color: trend>0 ? C.success : C.danger, marginTop:4}}>
+        {trend && <div style={{ fontSize: "0.7rem", color: trend > 0 ? C.success : C.danger, marginTop: 4 }}>
           <FaArrowUp size={10} /> {Math.abs(trend)}%
         </div>}
       </div>
@@ -966,23 +1162,23 @@ function ConfirmModal({ isOpen, onClose, onConfirm, title, message, itemName }) 
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="modal" style={{maxWidth:400, textAlign:"center"}} onClick={e=>e.stopPropagation()}>
-        <div style={{marginBottom:"1rem"}}>
-          <div style={{fontSize:48, color:C.warning, marginBottom:"0.5rem"}}>
+      <div className="modal" style={{ maxWidth: 400, textAlign: "center" }} onClick={e => e.stopPropagation()}>
+        <div style={{ marginBottom: "1rem" }}>
+          <div style={{ fontSize: 48, color: C.warning, marginBottom: "0.5rem" }}>
             <FaQuestionCircle size={48} />
           </div>
-          <h3 style={{fontFamily:"sans-serif", color:C.danger, marginBottom:"0.5rem"}}>{title}</h3>
-          <p style={{fontFamily:"sans-serif", color:C.text, marginBottom:"0.5rem"}}>{message}</p>
+          <h3 style={{ fontFamily: "sans-serif", color: C.danger, marginBottom: "0.5rem" }}>{title}</h3>
+          <p style={{ fontFamily: "sans-serif", color: C.text, marginBottom: "0.5rem" }}>{message}</p>
           {itemName && (
-            <p style={{fontFamily:"sans-serif", fontWeight:"bold", color:C.primary, marginTop:"0.5rem"}}>
+            <p style={{ fontFamily: "sans-serif", fontWeight: "bold", color: C.primary, marginTop: "0.5rem" }}>
               "{itemName}"
             </p>
           )}
-          <p style={{fontFamily:"sans-serif", fontSize:"0.8rem", color:C.danger, marginTop:"1rem"}}>
+          <p style={{ fontFamily: "sans-serif", fontSize: "0.8rem", color: C.danger, marginTop: "1rem" }}>
             ⚠️ This action cannot be undone!
           </p>
         </div>
-        <div style={{display:"flex", gap:"1rem", justifyContent:"center", marginTop:"1rem"}}>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", marginTop: "1rem" }}>
           <button className="btn-outline" onClick={onClose}>
             <FaBan size={12} /> Cancel
           </button>
@@ -995,12 +1191,12 @@ function ConfirmModal({ isOpen, onClose, onConfirm, title, message, itemName }) 
   );
 }
 
-function Dashboard({admin,onLogout}) {
-  const [data,setData]=useState([]);
-  const [selected,setSelected]=useState(null);
-  const [view,setView]=useState("analytics");
-  const [filterDept,setFilterDept]=useState("");
-  const [filterDesig,setFilterDesig]=useState("");
+function Dashboard({ admin, onLogout }) {
+  const [data, setData] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [view, setView] = useState("analytics");
+  const [filterDept, setFilterDept] = useState("");
+  const [filterDesig, setFilterDesig] = useState("");
   const [sortField, setSortField] = useState("submitted_at");
   const [sortDirection, setSortDirection] = useState("desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -1008,15 +1204,21 @@ function Dashboard({admin,onLogout}) {
   const [deleting, setDeleting] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null, name: "" });
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase.from("staff_submissions").select("*");
-      
+
       if (dateRange.start) query = query.gte("submitted_at", dateRange.start);
       if (dateRange.end) query = query.lte("submitted_at", dateRange.end);
-      
+
       const { data, error } = await query.order(sortField, { ascending: sortDirection === "asc" });
 
       if (!error) {
@@ -1030,52 +1232,44 @@ function Dashboard({admin,onLogout}) {
       setLoading(false);
     }
   }, [sortField, sortDirection, dateRange]);
-  
-  useEffect(()=>{ load(); },[load]);
+
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const deleteRecord = async (id, fullName) => {
     if (!id) {
-      alert("Invalid record ID");
+      showToast("Invalid record ID", "error");
       return;
     }
-    
+
     setDeleting(id);
-    
+
     try {
       const { error } = await supabase
         .from("staff_submissions")
         .delete()
         .eq("id", id);
-      
+
       if (error) {
         console.error("Delete error:", error);
-        alert("Error deleting record: " + error.message);
+        showToast("Error deleting record: " + error.message, "error");
         setDeleting(null);
         return;
       }
-      
+
       // IMMEDIATELY update local state - remove the deleted record
       setData(prevData => prevData.filter(record => record.id !== id));
-      
+
       // Close modal if the deleted record was open
       if (selected?.id === id) {
         setSelected(null);
       }
-      
-      // Show success message
-      const successMsg = document.createElement('div');
-      successMsg.className = 'alert-success';
-      successMsg.style.position = 'fixed';
-      successMsg.style.top = '20px';
-      successMsg.style.right = '20px';
-      successMsg.style.zIndex = '1000';
-      successMsg.innerHTML = `✓ Record for "${fullName}" has been deleted successfully.`;
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 3000);
-      
+
+      // Show toast notification instead of alert
+      showToast(`✓ Record for "${fullName}" has been deleted successfully.`, "success");
+
     } catch (err) {
       console.error("Delete error:", err);
-      alert("An error occurred while deleting the record.");
+      showToast("An error occurred while deleting the record.", "error");
     } finally {
       setDeleting(null);
       setConfirmModal({ isOpen: false, id: null, name: "" });
@@ -1100,21 +1294,22 @@ function Dashboard({admin,onLogout}) {
   // Full CSV export with every field
   const exportCSV = () => {
     if (!data.length) {
-      alert("No data to export");
+      showToast("No data to export", "error");
       return;
     }
-    const header = EXPORT_COLUMNS.map(([lbl])=>`"${lbl}"`).join(",");
+    const header = EXPORT_COLUMNS.map(([lbl]) => `"${lbl}"`).join(",");
     const rows = data.map(d =>
-      EXPORT_COLUMNS.map(([,key])=>`"${(d[key]||"").toString().replace(/"/g,'""')}"`).join(",")
+      EXPORT_COLUMNS.map(([, key]) => `"${(d[key] || "").toString().replace(/"/g, '""')}"`).join(",")
     );
-    const blob = new Blob(["\uFEFF" + header + "\n" + rows.join("\n")],{type:"text/csv;charset=utf-8;"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`NYSEI_Staff_Data_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    const blob = new Blob(["\uFEFF" + header + "\n" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `NYSEI_Staff_Data_${new Date().toISOString().split('T')[0]}.csv`; a.click();
     URL.revokeObjectURL(a.href);
+    showToast(`✓ Exported ${data.length} records successfully!`, "success");
   };
 
   const filtered = data
     .filter(d => (!filterDept || d.department === filterDept) && (!filterDesig || d.designation === filterDesig))
-    .filter(d => !searchTerm || 
+    .filter(d => !searchTerm ||
       d.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.national_id?.includes(searchTerm) ||
@@ -1130,10 +1325,33 @@ function Dashboard({admin,onLogout}) {
       return 0;
     });
 
-  const byDept = DEPARTMENTS.reduce((a,d)=>{a[d]=data.filter(x=>x.department===d).length;return a;},{});
-  const byDesig = DESIGNATIONS.reduce((a,d)=>{a[d]=data.filter(x=>x.designation===d).length;return a;},{});
-  const byGender = {Male:data.filter(x=>x.gender==="Male").length, Female:data.filter(x=>x.gender==="Female").length};
-  
+  const byDept = DEPARTMENTS.reduce((a, d) => { a[d] = data.filter(x => x.department === d).length; return a; }, {});
+  const byDesig = DESIGNATIONS.reduce((a, d) => { a[d] = data.filter(x => x.designation === d).length; return a; }, {});
+  const byGender = { Male: data.filter(x => x.gender === "Male").length, Female: data.filter(x => x.gender === "Female").length };
+
+  // Age distribution
+  const currentYear = new Date().getFullYear();
+  const ageBands = {
+    "Under 30": 0,
+    "30 – 39": 0,
+    "40 – 49": 0,
+    "50 – 59": 0,
+    "60 & Above": 0,
+  };
+  data.forEach(x => {
+    if (!x.dob_year) return;
+    const age = currentYear - parseInt(x.dob_year);
+    if (age < 30) ageBands["Under 30"]++;
+    else if (age < 40) ageBands["30 – 39"]++;
+    else if (age < 50) ageBands["40 – 49"]++;
+    else if (age < 60) ageBands["50 – 59"]++;
+    else ageBands["60 & Above"]++;
+  });
+  const ageChartData = Object.entries(ageBands).map(([band, count]) => ({ band, count }));
+  const avgAge = data.filter(x => x.dob_year).length > 0
+    ? Math.round(data.filter(x => x.dob_year).reduce((sum, x) => sum + (currentYear - parseInt(x.dob_year)), 0) / data.filter(x => x.dob_year).length)
+    : 0;
+
   const submissionsByMonth = data.reduce((acc, item) => {
     if (item.submitted_at) {
       const month = new Date(item.submitted_at).toLocaleString('default', { month: 'short' });
@@ -1141,31 +1359,31 @@ function Dashboard({admin,onLogout}) {
     }
     return acc;
   }, {});
-  
+
   const timeSeriesData = Object.entries(submissionsByMonth).map(([month, count]) => ({ month, count }));
-  
+
   const qualificationLevels = {
-    "Certificate": data.filter(x=>x.cert_name).length,
-    "Diploma": data.filter(x=>x.diploma_name).length,
-    "Degree": data.filter(x=>x.degree_name).length,
-    "Masters": data.filter(x=>x.masters_name).length,
-    "PhD": data.filter(x=>x.phd_name).length
+    "Certificate": data.filter(x => x.cert_name).length,
+    "Diploma": data.filter(x => x.diploma_name).length,
+    "Degree": data.filter(x => x.degree_name).length,
+    "Masters": data.filter(x => x.masters_name).length,
+    "PhD": data.filter(x => x.phd_name).length
   };
-  
+
   const pieData = Object.entries(qualificationLevels).map(([name, value]) => ({ name, value }));
-  
+
   const disabilityData = [
-    { name: "With Disability", value: data.filter(x=>x.disability==="Yes").length },
-    { name: "No Disability", value: data.filter(x=>x.disability!=="Yes").length }
+    { name: "With Disability", value: data.filter(x => x.disability === "Yes").length },
+    { name: "No Disability", value: data.filter(x => x.disability !== "Yes").length }
   ];
-  
+
   const jobGroupData = data.reduce((acc, item) => {
     if (item.job_group) {
       acc[item.job_group] = (acc[item.job_group] || 0) + 1;
     }
     return acc;
   }, {});
-  
+
   const jobGroupChartData = Object.entries(jobGroupData).map(([group, count]) => ({ group, count }));
 
   const handleSort = (field) => {
@@ -1178,24 +1396,27 @@ function Dashboard({admin,onLogout}) {
   };
 
   const SortIcon = ({ field }) => {
-    if (sortField !== field) return <FaSort size={10} style={{marginLeft:4}} />;
-    return sortDirection === "asc" ? <FaSortUp size={10} style={{marginLeft:4}} /> : <FaSortDown size={10} style={{marginLeft:4}} />;
+    if (sortField !== field) return <FaSort size={10} style={{ marginLeft: 4 }} />;
+    return sortDirection === "asc" ? <FaSortUp size={10} style={{ marginLeft: 4 }} /> : <FaSortDown size={10} style={{ marginLeft: 4 }} />;
   };
 
-  const fmtDate = (d,m,y) => [d,m,y].filter(Boolean).join(" ");
+  const fmtDate = (d, m, y) => [d, m, y].filter(Boolean).join(" ");
 
   const navBtn = (id, lbl, icon) => (
-    <button key={id} className={view===id ? "btn" : "btn-outline"} onClick={()=>setView(id)}>
+    <button key={id} className={view === id ? "btn" : "btn-outline"} onClick={() => setView(id)}>
       {icon} {lbl}
     </button>
   );
 
   return (
-    <div style={{background:C.bg,minHeight:"100vh"}}>
-      {/* Print area — hidden on screen, shown when printing */}
-      {selected && <PrintRecord r={selected}/>}
+    <div style={{ background: C.bg, minHeight: "100vh" }}>
+      {/* Toast Notification */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <ConfirmModal 
+      {/* Print area — hidden on screen, shown when printing */}
+      {selected && <PrintRecord r={selected} />}
+
+      <ConfirmModal
         isOpen={confirmModal.isOpen}
         onClose={closeConfirmModal}
         onConfirm={() => deleteRecord(confirmModal.id, confirmModal.name)}
@@ -1211,15 +1432,15 @@ function Dashboard({admin,onLogout}) {
           {navBtn("insights", "Insights", <MdTimeline size={14} />)}
         </div>
         <div className="nav-user">
-          <button className="btn-outline" style={{padding:"6px 10px",fontSize:"0.75rem"}} onClick={load}>
-            <FaDatabase/><span className="hide-sm"> Refresh</span>
+          <button className="btn-outline" style={{ padding: "6px 10px", fontSize: "0.75rem" }} onClick={load}>
+            <FaDatabase /><span className="hide-sm"> Refresh</span>
           </button>
-          <button className="btn-outline" style={{padding:"6px 10px",fontSize:"0.75rem"}} onClick={exportCSV} disabled={!data.length}>
-            <FaFileExport/><span className="hide-sm"> Export CSV</span>
+          <button className="btn-outline" style={{ padding: "6px 10px", fontSize: "0.75rem" }} onClick={exportCSV} disabled={!data.length}>
+            <FaFileExport /><span className="hide-sm"> Export CSV</span>
           </button>
-          <FaUserShield size={14} style={{color:C.muted}} />
-          <span style={{color:C.muted}}>{admin.name}</span>
-          <button className="btn-outline" style={{padding:"5px 12px"}} onClick={onLogout}>
+          <FaUserShield size={14} style={{ color: C.muted }} />
+          <span style={{ color: C.muted }}>{admin.name}</span>
+          <button className="btn-outline" style={{ padding: "5px 12px" }} onClick={onLogout}>
             <FaSignOutAlt size={12} /> Sign Out
           </button>
         </div>
@@ -1228,33 +1449,33 @@ function Dashboard({admin,onLogout}) {
       <div className="container-wide no-print">
         <div className="filter-bar">
           <div className="search-wrap">
-            <FaSearch className="search-icon"/>
-            <input 
-              type="text" 
-              placeholder="Search name, email, ID, department..." 
-              value={searchTerm} 
-              onChange={e=>setSearchTerm(e.target.value)}
-              style={{paddingLeft:32}}
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search name, email, ID, department..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: 32 }}
             />
           </div>
           <div className="filter-group">
             <label className="label"><FaFilter size={10} /> Department</label>
-            <select value={filterDept} onChange={e=>setFilterDept(e.target.value)}>
+            <select value={filterDept} onChange={e => setFilterDept(e.target.value)}>
               <option value="">All Departments</option>
-              {DEPARTMENTS.map(d=><option key={d}>{d}</option>)}
+              {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
             </select>
           </div>
           <div className="filter-group">
             <label className="label"><FaUserTie size={10} /> Designation</label>
-            <select value={filterDesig} onChange={e=>setFilterDesig(e.target.value)}>
+            <select value={filterDesig} onChange={e => setFilterDesig(e.target.value)}>
               <option value="">All Designations</option>
-              {DESIGNATIONS.map(d=><option key={d}>{d}</option>)}
+              {DESIGNATIONS.map(d => <option key={d}>{d}</option>)}
             </select>
           </div>
-          {(searchTerm||filterDept||filterDesig) &&
-            <button className="btn-outline" style={{color:C.danger,borderColor:C.danger,padding:"8px 10px"}}
-              onClick={()=>{setSearchTerm("");setFilterDept("");setFilterDesig("");}}>
-              <FaTimes/> Clear
+          {(searchTerm || filterDept || filterDesig) &&
+            <button className="btn-outline" style={{ color: C.danger, borderColor: C.danger, padding: "8px 10px" }}
+              onClick={() => { setSearchTerm(""); setFilterDept(""); setFilterDesig(""); }}>
+              <FaTimes /> Clear
             </button>
           }
         </div>
@@ -1265,9 +1486,10 @@ function Dashboard({admin,onLogout}) {
               <StatCard label="Total Staff" value={data.length} icon={FaUsers} color={C.primary} />
               <StatCard label="Male" value={byGender.Male} icon={FaMale} color="#4A90E2" />
               <StatCard label="Female" value={byGender.Female} icon={FaFemale} color="#E25A6E" />
-              <StatCard label="With Disability" value={data.filter(x=>x.disability==="Yes").length} icon={FaWheelchair} color={C.warning} />
-              <StatCard label="Degree Holders" value={data.filter(x=>x.degree_name).length} icon={FaGraduationCap} color={C.success} />
-              <StatCard label="TVETA Registered" value={data.filter(x=>x.tveta_reg_no?.trim()).length} icon={FaCertificate} color={C.accent} />
+              <StatCard label="Average Age" value={avgAge ? `${avgAge} yrs` : "—"} icon={FaRegCalendarAlt} color={C.info} />
+              <StatCard label="With Disability" value={data.filter(x => x.disability === "Yes").length} icon={FaWheelchair} color={C.warning} />
+              <StatCard label="Degree Holders" value={data.filter(x => x.degree_name).length} icon={FaGraduationCap} color={C.success} />
+              <StatCard label="TVETA Registered" value={data.filter(x => x.tveta_reg_no?.trim()).length} icon={FaCertificate} color={C.accent} />
             </div>
 
             <div className="grid-2">
@@ -1327,6 +1549,69 @@ function Dashboard({admin,onLogout}) {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+
+              {/* Age Distribution — full width */}
+              <div className="chart-container" style={{ gridColumn: "1 / -1" }}>
+                <div className="sec-title"><FaRegCalendarAlt size={12} /> Staff Age Distribution</div>
+
+                {/* Age band summary cards */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10, marginBottom: "1.25rem" }}>
+                  {ageChartData.map(({ band, count }) => (
+                    <div key={band} style={{ background: C.light, borderRadius: 8, padding: "0.75rem", textAlign: "center", border: `1px solid ${C.border}` }}>
+                      <div style={{ fontFamily: "sans-serif", fontSize: "0.62rem", color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                        {band}
+                      </div>
+                      <div style={{ fontFamily: "sans-serif", fontSize: "1.4rem", fontWeight: 700, color: C.primary }}>
+                        {count}
+                      </div>
+                      <div style={{ fontFamily: "sans-serif", fontSize: "0.68rem", color: C.muted, marginTop: 2 }}>
+                        {data.filter(x => x.dob_year).length > 0
+                          ? `${Math.round((count / data.filter(x => x.dob_year).length) * 100)}%`
+                          : "0%"
+                        }
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ background: C.primary, borderRadius: 8, padding: "0.75rem", textAlign: "center", border: `1px solid ${C.primary}` }}>
+                    <div style={{ fontFamily: "sans-serif", fontSize: "0.62rem", color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                      Average Age
+                    </div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: "1.4rem", fontWeight: 700, color: "#fff" }}>
+                      {avgAge || "—"}
+                    </div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: "0.68rem", color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
+                      years
+                    </div>
+                  </div>
+                </div>
+
+                {/* Age bar chart */}
+                <ResponsiveContainer width="100%" height={250}>
+                  <ReBarChart data={ageChartData} barSize={48}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="band" fontFamily="sans-serif" fontSize={12} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip
+                      formatter={(value, name) => [value, "Staff Count"]}
+                      labelFormatter={(label) => `Age Band: ${label}`}
+                    />
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                      {ageChartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={[C.primary, C.accent, C.info, C.success, C.warning][index % 5]}
+                        />
+                      ))}
+                    </Bar>
+                  </ReBarChart>
+                </ResponsiveContainer>
+
+                {data.filter(x => !x.dob_year).length > 0 && (
+                  <p style={{ fontFamily: "sans-serif", fontSize: "0.72rem", color: C.muted, marginTop: "0.75rem", textAlign: "center" }}>
+                    * {data.filter(x => !x.dob_year).length} staff record{data.filter(x => !x.dob_year).length !== 1 ? "s" : ""} excluded — date of birth not captured
+                  </p>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -1384,11 +1669,11 @@ function Dashboard({admin,onLogout}) {
             <div className="chart-container">
               <div className="sec-title"><FaPercent size={12} /> Gender Distribution</div>
               <ResponsiveContainer width="100%" height={300}>
-                <RadialBarChart 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius="20%" 
-                  outerRadius="80%" 
+                <RadialBarChart
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="20%"
+                  outerRadius="80%"
                   data={[
                     { name: "Male", value: byGender.Male, fill: "#4A90E2" },
                     { name: "Female", value: byGender.Female, fill: "#E25A6E" }
@@ -1406,41 +1691,41 @@ function Dashboard({admin,onLogout}) {
         {view === "records" && (
           <>
             {/* Desktop table */}
-            <div className="card show-tbl" style={{padding:0,overflow:"hidden"}}>
+            <div className="card show-tbl" style={{ padding: 0, overflow: "hidden" }}>
               {loading
-                ? <p style={{fontFamily:"sans-serif",color:C.muted,textAlign:"center",padding:"2.5rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaSpinner className="spin"/>Loading…</p>
+                ? <p style={{ fontFamily: "sans-serif", color: C.muted, textAlign: "center", padding: "2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><FaSpinner className="spin" />Loading…</p>
                 : filtered.length === 0
-                  ? <p style={{padding:"2.5rem", textAlign:"center"}}><FaRegFileAlt size={48} style={{marginBottom:16, opacity:0.5}} /><br />No submissions found.</p>
-                  : <div style={{overflowX:"auto"}}>
+                  ? <p style={{ padding: "2.5rem", textAlign: "center" }}><FaRegFileAlt size={48} style={{ marginBottom: 16, opacity: 0.5 }} /><br />No submissions found.</p>
+                  : <div style={{ overflowX: "auto" }}>
                     <table className="tbl">
                       <thead>
                         <tr>
-                          <th onClick={()=>handleSort("full_name")}>Name <SortIcon field="full_name" /></th>
-                          <th onClick={()=>handleSort("email")}>Email <SortIcon field="email" /></th>
-                          <th onClick={()=>handleSort("gender")}>Gender <SortIcon field="gender" /></th>
-                          <th onClick={()=>handleSort("department")}>Dept <SortIcon field="department" /></th>
-                          <th onClick={()=>handleSort("designation")}>Designation <SortIcon field="designation" /></th>
-                          <th className="tbl-hide-mobile" onClick={()=>handleSort("submitted_at")}>Submitted <SortIcon field="submitted_at" /></th>
+                          <th onClick={() => handleSort("full_name")}>Name <SortIcon field="full_name" /></th>
+                          <th onClick={() => handleSort("email")}>Email <SortIcon field="email" /></th>
+                          <th onClick={() => handleSort("gender")}>Gender <SortIcon field="gender" /></th>
+                          <th onClick={() => handleSort("department")}>Dept <SortIcon field="department" /></th>
+                          <th onClick={() => handleSort("designation")}>Designation <SortIcon field="designation" /></th>
+                          <th className="tbl-hide-mobile" onClick={() => handleSort("submitted_at")}>Submitted <SortIcon field="submitted_at" /></th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filtered.map(row => (
                           <tr key={row.id}>
-                            <td style={{fontWeight:600}}>{row.full_name}<br/><span style={{fontSize:"0.68rem",color:C.muted}}>{row.national_id}</span></td>
-                            <td><FaEnvelope size={10} style={{marginRight:4}} /> {row.email || "—"}</td>
+                            <td style={{ fontWeight: 600 }}>{row.full_name}<br /><span style={{ fontSize: "0.68rem", color: C.muted }}>{row.national_id}</span></td>
+                            <td><FaEnvelope size={10} style={{ marginRight: 4 }} /> {row.email || "—"}</td>
                             <td>{row.gender === "Male" ? <FaMale color="#4A90E2" /> : <FaFemale color="#E25A6E" />} {row.gender}</td>
                             <td>{row.department}</td>
                             <td><span className="badge">{row.designation}</span></td>
-                            <td className="tbl-hide-mobile" style={{whiteSpace:"nowrap"}}>{row.submitted_at ? new Date(row.submitted_at).toLocaleDateString() : "—"}</td>
+                            <td className="tbl-hide-mobile" style={{ whiteSpace: "nowrap" }}>{row.submitted_at ? new Date(row.submitted_at).toLocaleDateString() : "—"}</td>
                             <td>
-                              <div style={{display:"flex", gap:"5px"}}>
-                                <button className="btn-outline" style={{padding:"4px 10px"}} onClick={()=>setSelected(row)}>
+                              <div style={{ display: "flex", gap: "5px" }}>
+                                <button className="btn-outline" style={{ padding: "4px 10px" }} onClick={() => setSelected(row)}>
                                   <FaEye size={10} /> View
                                 </button>
-                                <button 
-                                  className="btn-danger" 
-                                  style={{padding:"4px 10px", background:C.danger, color:"#fff"}} 
+                                <button
+                                  className="btn-danger"
+                                  style={{ padding: "4px 10px", background: C.danger, color: "#fff" }}
                                   onClick={() => openConfirmModal(row.id, row.full_name)}
                                   disabled={deleting === row.id}
                                 >
@@ -1460,29 +1745,29 @@ function Dashboard({admin,onLogout}) {
             {/* Mobile cards */}
             <div className="show-cards">
               {loading
-                ? <div style={{fontFamily:"sans-serif",color:C.muted,padding:"2rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaSpinner className="spin"/>Loading…</div>
-                : filtered.length===0
-                  ? <div style={{fontFamily:"sans-serif",color:C.muted,padding:"2rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaUsers/>No records found.</div>
-                  : filtered.map((row)=>(
+                ? <div style={{ fontFamily: "sans-serif", color: C.muted, padding: "2rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><FaSpinner className="spin" />Loading…</div>
+                : filtered.length === 0
+                  ? <div style={{ fontFamily: "sans-serif", color: C.muted, padding: "2rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><FaUsers />No records found.</div>
+                  : filtered.map((row) => (
                     <div className="rec-card" key={row.id}>
                       <div className="rec-card-header">
                         <div className="rec-avatar">{row.full_name?.charAt(0)?.toUpperCase()}</div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontFamily:"sans-serif",fontWeight:700,fontSize:"0.9rem",color:C.primary,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{row.full_name}</div>
-                          <div style={{fontFamily:"sans-serif",fontSize:"0.72rem",color:C.muted}}>{row.national_id}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: "sans-serif", fontWeight: 700, fontSize: "0.9rem", color: C.primary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.full_name}</div>
+                          <div style={{ fontFamily: "sans-serif", fontSize: "0.72rem", color: C.muted }}>{row.national_id}</div>
                         </div>
                       </div>
                       <div className="rec-card-body">
                         <div><div className="rec-field-lbl">Email</div><div className="rec-field-val">{row.email || "—"}</div></div>
-                        <div><div className="rec-field-lbl">Gender</div><div className="rec-field-val" style={{display:"flex",alignItems:"center",gap:3}}>{row.gender==="Male"?<FaMale style={{color:"#2563EB"}}/>:<FaFemale style={{color:"#DB2777"}}/>}{row.gender}</div></div>
+                        <div><div className="rec-field-lbl">Gender</div><div className="rec-field-val" style={{ display: "flex", alignItems: "center", gap: 3 }}>{row.gender === "Male" ? <FaMale style={{ color: "#2563EB" }} /> : <FaFemale style={{ color: "#DB2777" }} />}{row.gender}</div></div>
                         <div><div className="rec-field-lbl">Department</div><div className="rec-field-val">{row.department}</div></div>
                         <div><div className="rec-field-lbl">Designation</div><div className="rec-field-val"><span className="badge">{row.designation}</span></div></div>
-                        <div><div className="rec-field-lbl">Submitted</div><div className="rec-field-val">{row.submitted_at?new Date(row.submitted_at).toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"}):"—"}</div></div>
+                        <div><div className="rec-field-lbl">Submitted</div><div className="rec-field-val">{row.submitted_at ? new Date(row.submitted_at).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</div></div>
                       </div>
                       <div className="rec-card-footer">
-                        <button className="btn-outline" style={{padding:"6px 12px",fontSize:"0.78rem"}} onClick={()=>setSelected(row)}><FaEye/> View</button>
-                        <button className="btn-danger"  style={{padding:"6px 12px",fontSize:"0.78rem"}} onClick={()=>openConfirmModal(row.id,row.full_name)} disabled={deleting===row.id}>
-                          {deleting===row.id?<FaSpinner className="spin"/>:<FaTrash/>} Delete
+                        <button className="btn-outline" style={{ padding: "6px 12px", fontSize: "0.78rem" }} onClick={() => setSelected(row)}><FaEye /> View</button>
+                        <button className="btn-danger" style={{ padding: "6px 12px", fontSize: "0.78rem" }} onClick={() => openConfirmModal(row.id, row.full_name)} disabled={deleting === row.id}>
+                          {deleting === row.id ? <FaSpinner className="spin" /> : <FaTrash />} Delete
                         </button>
                       </div>
                     </div>
@@ -1495,19 +1780,19 @@ function Dashboard({admin,onLogout}) {
 
       {/* Detail Modal with improved layout */}
       {selected && (
-        <div className="overlay no-print" onClick={()=>setSelected(null)}>
-          <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="overlay no-print" onClick={() => setSelected(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
-                <div style={{width:50,height:50,borderRadius:"50%",background:C.light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem",fontWeight:700,color:C.primary,flexShrink:0}}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                <div style={{ width: 50, height: 50, borderRadius: "50%", background: C.light, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem", fontWeight: 700, color: C.primary, flexShrink: 0 }}>
                   {selected.full_name?.charAt(0)?.toUpperCase()}
                 </div>
-                <div style={{minWidth:0}}>
-                  <h2 style={{fontFamily:"sans-serif",color:C.primary,fontSize:"1.1rem",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis"}}>{selected.full_name}</h2>
-                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                <div style={{ minWidth: 0 }}>
+                  <h2 style={{ fontFamily: "sans-serif", color: C.primary, fontSize: "1.1rem", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis" }}>{selected.full_name}</h2>
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                     <span className="badge">{selected.designation}</span>
                     <span className="badge">{selected.department}</span>
-                    {selected.tveta_reg_no && <span className="badge-green"><FaCertificate/>{selected.tveta_reg_no}</span>}
+                    {selected.tveta_reg_no && <span className="badge-green"><FaCertificate />{selected.tveta_reg_no}</span>}
                   </div>
                 </div>
               </div>
@@ -1515,28 +1800,48 @@ function Dashboard({admin,onLogout}) {
                 <button className="btn-icon" onClick={handlePrint} title="Print Report">
                   <FaPrint size={18} />
                 </button>
-                <button 
-                  className="btn-icon btn-icon-danger" 
+                <button
+                  className="btn-icon btn-icon-danger"
                   onClick={() => openConfirmModal(selected.id, selected.full_name)}
                   disabled={deleting === selected.id}
                   title="Delete Record"
                 >
                   {deleting === selected.id ? <FaSpinner className="spin" size={16} /> : <FaTrash size={16} />}
                 </button>
-                <button className="btn-icon" onClick={()=>setSelected(null)} title="Close">
+                <button className="btn-icon" onClick={() => setSelected(null)} title="Close">
                   <FaTimes size={18} />
                 </button>
               </div>
             </div>
             {[
-              ["Personal",[[<FaUser/>,"Full Name",selected.full_name],[<FaEnvelope/>,"Email",selected.email],[<FaUser/>,"Gender",selected.gender],[<FaIdCard/>,"National ID",selected.national_id],[<FaCalendarAlt/>,"Date of Birth",fmtDate(selected.dob_day,selected.dob_month,selected.dob_year)],[<FaInfoCircle/>,"Disability",selected.disability],[<FaInfoCircle/>,"Disability Nature",selected.disability_nature]]],
-              ["Employment",[[<FaUserTie/>,"Designation",selected.designation],[<FaBuilding/>,"Department",selected.department],[<FaBriefcase/>,"Job Group",selected.job_group],[<FaCalendarAlt/>,"Date of Appointment",fmtDate(selected.appointment_day,selected.appointment_month,selected.appointment_year)],[<FaCalendarAlt/>,"Retirement/Expiry",fmtDate(selected.retirement_day,selected.retirement_month,selected.retirement_year)],[<FaClipboardList/>,"Duties/Roles",selected.duties_roles],[<FaClipboardList/>,"Responsibilities",selected.responsibilities]]],
-              ["Qualifications",[[<FaBook/>,"KCSE",selected.kcse_year?`${selected.kcse_year} — ${selected.kcse_grade}`:""],[<FaCertificate/>,"Certificate",selected.cert_name?`${selected.cert_name} (${selected.cert_year})`:""],[<FaCertificate/>,"Diploma",selected.diploma_name?`${selected.diploma_name} (${selected.diploma_year})`:""],[<FaGraduationCap/>,"Degree",selected.degree_name?`${selected.degree_name} (${selected.degree_year})`:""],[<FaGraduationCap/>,"Masters",selected.masters_name?`${selected.masters_name} (${selected.masters_year})`:""],[<FaGraduationCap/>,"PhD",selected.phd_name?`${selected.phd_name} (${selected.phd_year})`:""]]],
-              ["Professional",[[<FaChalkboardTeacher/>,"Pedagogy",selected.pedagogy_year?`${selected.pedagogy_year} — ${selected.pedagogy_grade}`:""],[<FaChalkboardTeacher/>,"ToT",selected.tot_year?`${selected.tot_year} — ${selected.tot_grade}`:""],[<FaChalkboardTeacher/>,"Supervisory",selected.superv_year?`${selected.superv_year} — ${selected.superv_grade}`:""],[<FaCertificate/>,"TVETA Reg No.",selected.tveta_reg_no],[<FaCalendarAlt/>,"TVETA Registered",selected.tveta_date],[<FaCalendarAlt/>,"TVETA Expiry",selected.tveta_expiry]]],
-            ].map(([sec,fields])=>(
-              <div key={sec} style={{marginBottom:"1.25rem"}}>
+              ["Personal", [[<FaUser />, "Full Name", selected.full_name], [<FaEnvelope />, "Email", selected.email], [<FaUser />, "Gender", selected.gender], [<FaIdCard />, "National ID", selected.national_id], [<FaCalendarAlt />, "Date of Birth", fmtDate(selected.dob_day, selected.dob_month, selected.dob_year)], [<FaInfoCircle />, "Disability", selected.disability], [<FaInfoCircle />, "Disability Nature", selected.disability_nature]]],
+              ["Employment", [[<FaUserTie />, "Designation", selected.designation], [<FaBuilding />, "Department", selected.department], [<FaIdCard />, "Personal Number", selected.personal_number], [<FaBriefcase />, "Job Group", selected.job_group], [<FaCalendarAlt />, "Date of Appointment", fmtDate(selected.appointment_day, selected.appointment_month, selected.appointment_year)], [<FaCalendarAlt />, "Retirement/Expiry", fmtDate(selected.retirement_day, selected.retirement_month, selected.retirement_year)], [<FaClipboardList />, "Duties/Roles", selected.duties_roles], [<FaClipboardList />, "Responsibilities", selected.responsibilities]]],
+              ["Qualifications", [[<FaBook />, "KCSE", selected.kcse_year ? `${selected.kcse_year} — ${selected.kcse_grade}` : ""], [<FaCertificate />, "Certificate", selected.cert_name ? `${selected.cert_name} (${selected.cert_year})` : ""], [<FaCertificate />, "Diploma", selected.diploma_name ? `${selected.diploma_name} (${selected.diploma_year})` : ""], [<FaGraduationCap />, "Degree", selected.degree_name ? `${selected.degree_name} (${selected.degree_year})` : ""], [<FaGraduationCap />, "Masters", selected.masters_name ? `${selected.masters_name} (${selected.masters_year})` : ""], [<FaGraduationCap />, "PhD", selected.phd_name ? `${selected.phd_name} (${selected.phd_year})` : ""]]],
+              ["Professional", [
+                [<FaChalkboardTeacher />, "Pedagogy", selected.pedagogy_year ? `${selected.pedagogy_year} — ${selected.pedagogy_grade}` : ""],
+                [<FaChalkboardTeacher />, "ToT", selected.tot_year ? `${selected.tot_year} — ${selected.tot_grade}` : ""],
+                [<FaChalkboardTeacher />, "Supervisory", selected.superv_year ? `${selected.superv_year} — ${selected.superv_grade}` : ""],
+                [<FaChalkboardTeacher />, "Senior Management", selected.senior_mgmt_year ? `${selected.senior_mgmt_year} — ${selected.senior_mgmt_grade}` : ""],
+                [<FaChalkboardTeacher />, "SLDP", selected.sldp_year ? `${selected.sldp_year} — ${selected.sldp_grade}` : ""],
+                [<FaChalkboardTeacher />, "Retirement Course", selected.retire_course_year ? `${selected.retire_course_year} — ${selected.retire_course_grade}` : ""],
+                ...((() => {
+                  try {
+                    const courses = JSON.parse(selected.other_courses || "[]");
+                    return courses.map((c, i) => [
+                      <FaChalkboardTeacher />,
+                      `Other Course ${i + 1}`,
+                      c.desc ? `${c.desc}${c.year ? ` (${c.year})` : ""}${c.grade ? ` — ${c.grade}` : ""}` : ""
+                    ]);
+                  } catch { return []; }
+                })()),
+                [<FaCertificate />, "TVETA Reg No.", selected.tveta_reg_no],
+                [<FaCalendarAlt />, "TVETA Registered", selected.tveta_date],
+                [<FaCalendarAlt />, "TVETA Expiry", selected.tveta_expiry],
+              ]],
+            ].map(([sec, fields]) => (
+              <div key={sec} style={{ marginBottom: "1.25rem" }}>
                 <div className="sec-title">{sec}</div>
-                {fields.filter(([,,v])=>v).map(([icon,k,v])=>(
+                {fields.filter(([, , v]) => v).map(([icon, k, v]) => (
                   <div className="rev-row" key={k}>
                     <span className="rev-key">{icon} {k}</span>
                     <span className="rev-val">{v}</span>
@@ -1552,8 +1857,20 @@ function Dashboard({admin,onLogout}) {
 }
 
 export default function App() {
-  const [screen,setScreen]=useState("form");
-  const [admin,setAdmin]=useState(null);
+  const [screen, setScreen] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("nysei_admin");
+      return saved ? "dashboard" : "form";
+    } catch { return "form"; }
+  });
+
+  const [admin, setAdmin] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("nysei_admin");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
   return (
     <div className="app">
       <style>{css}</style>
@@ -1567,16 +1884,25 @@ export default function App() {
             </div>
           </div>
           <div className="header-actions">
-            {screen!=="form" && <button className="btn-ghost" onClick={()=>setScreen("form")}><FaClipboardList size={12} /> Form</button>}
-            {screen==="form" && <button className="btn-ghost" onClick={()=>setScreen(admin?"dashboard":"login")}><FaUserShield size={12} /> Admin</button>}
-            {screen==="login" && <span className="badge-accent"><FaLock size={10} /> Login</span>}
-            {screen==="dashboard" && <span className="badge-accent"><FaUserShield size={10} /> {admin?.role}</span>}
+            {screen !== "form" && <button className="btn-ghost" onClick={() => setScreen("form")}><FaClipboardList size={12} /> Form</button>}
+            {screen === "form" && <button className="btn-ghost" onClick={() => setScreen(admin ? "dashboard" : "login")}><FaUserShield size={12} /> Admin</button>}
+            {screen === "login" && <span className="badge-accent"><FaLock size={10} /> Login</span>}
+            {screen === "dashboard" && <span className="badge-accent"><FaUserShield size={10} /> {admin?.role}</span>}
           </div>
         </div>
       </header>
-      {screen==="form" && <DataForm />}
-      {screen==="login" && <Login onLogin={u=>{setAdmin(u);setScreen("dashboard");}} />}
-      {screen==="dashboard" && admin && <Dashboard admin={admin} onLogout={()=>{setAdmin(null);setScreen("form");}} />}
+      {screen === "form" && <DataForm />}
+
+      {screen === "login" && <Login onLogin={u => {
+        sessionStorage.setItem("nysei_admin", JSON.stringify(u));
+        setAdmin(u);
+        setScreen("dashboard");
+      }} />}
+      {screen === "dashboard" && admin && <Dashboard admin={admin} onLogout={() => {
+        sessionStorage.removeItem("nysei_admin");
+        setAdmin(null);
+        setScreen("form");
+      }} />}
     </div>
   );
 }
