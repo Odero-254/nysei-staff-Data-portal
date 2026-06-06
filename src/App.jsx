@@ -557,6 +557,7 @@ function DataForm() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(emptyForm());
   const [errors, setErrors] = useState({});
+  const [successes, setSuccesses] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -565,22 +566,236 @@ function DataForm() {
   const inp = k => ({ value: form[k] || "", onChange: e => set(k, e.target.value) });
   const isPartTime = ["Part Time Lecturer", "Intern", "Teaching Practice"].includes(form.designation);
 
+  const fieldMsg = (key) => {
+    if (!errors[key] && !successes[key]) return null;
+    const isError = !!errors[key];
+    return (
+      <span style={{ color: isError ? C.danger : C.success, fontSize: "0.72rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+        {isError ? <FaExclamationTriangle size={10} /> : <FaCheck size={10} />}
+        {errors[key] || successes[key]}
+      </span>
+    );
+  };
+
   const validate = () => {
     const e = {};
+
+    // ── STEP 0: Personal Information ──────────────────────────────
     if (step === 0) {
-      if (!form.fullName?.trim()) e.fullName = "Required";
-      if (!form.email?.trim()) e.email = "Required";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email format";
-      if (!form.gender) e.gender = "Required";
-      if (!form.nationalId?.trim()) e.nationalId = "Required";
-    }
-    if (step === 1) {
-      if (!form.designation) e.designation = "Required";
-      if (!form.department) e.department = "Required";
-      if (["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation)) {
-        if (!form.personalNumber?.trim()) e.personalNumber = "Required";
+      if (!form.fullName?.trim())
+        e.fullName = "Required";
+
+      if (!form.email?.trim())
+        e.email = "Required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+        e.email = "Invalid email format";
+
+      if (!form.gender)
+        e.gender = "Required";
+
+      if (!form.nationalId?.trim())
+        e.nationalId = "Required";
+
+      // DOB — all three parts required
+      if (!form.dobDay || !form.dobMonth || !form.dobYear)
+        e.dob = "Date of birth is required";
+      else {
+        // DOB cannot be in the future
+        const dobMonth = MONTHS.indexOf(form.dobMonth);
+        const dob = new Date(parseInt(form.dobYear), dobMonth, parseInt(form.dobDay));
+        if (dob > new Date())
+          e.dob = "Date of birth cannot be in the future";
       }
+
+      // Disability must be selected
+      if (!form.disability)
+        e.disability = "Required — please select Yes or No";
+      if (form.disability === "Yes" && !form.disabilityNature?.trim())
+        e.disabilityNature = "Please describe the nature of disability";
     }
+
+    // ── STEP 1: Employment ─────────────────────────────────────────
+    if (step === 1) {
+      if (!form.designation)
+        e.designation = "Required";
+
+      if (!form.department)
+        e.department = "Required";
+
+      // Personal Number — required and must be digits only
+      if (["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation)) {
+        if (!form.personalNumber?.trim())
+          e.personalNumber = "Required";
+        else if (!/^\d+$/.test(form.personalNumber.trim()))
+          e.personalNumber = "Personal number must contain digits only — no letters, spaces or symbols";
+      }
+
+      // Job Group required for Full Time Lecturer and Support Staff
+      if (["Full Time Lecturer", "Support Staff"].includes(form.designation)) {
+        if (!form.jobGroup)
+          e.jobGroup = "Required for this designation";
+      }
+
+      // Date of Appointment required
+      if (!form.appointmentDay || !form.appointmentMonth || !form.appointmentYear) {
+        e.appointment = "Date of appointment is required";
+      } else {
+        const apptMonth = MONTHS.indexOf(form.appointmentMonth);
+        const apptDate = new Date(parseInt(form.appointmentYear), apptMonth, parseInt(form.appointmentDay));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // strip time for clean comparison
+        if (apptDate > today)
+          e.appointment = "Date of appointment cannot be in the future";
+      }
+
+      // Retirement / Expiry required for all
+      if (!form.retirementDay || !form.retirementMonth || !form.retirementYear)
+        e.retirement = "Retirement / contract expiry date is required";
+
+      // Date logic — only check if both dates are fully entered
+      if (
+        form.appointmentDay && form.appointmentMonth && form.appointmentYear &&
+        form.retirementDay && form.retirementMonth && form.retirementYear
+      ) {
+        const apptMonth = MONTHS.indexOf(form.appointmentMonth);
+        const retMonth = MONTHS.indexOf(form.retirementMonth);
+        const apptDate = new Date(parseInt(form.appointmentYear), apptMonth, parseInt(form.appointmentDay));
+        const retDate = new Date(parseInt(form.retirementYear), retMonth, parseInt(form.retirementDay));
+
+        if (retDate <= apptDate) {
+          const label = ["Part Time Lecturer", "Intern", "Teaching Practice"].includes(form.designation)
+            ? "Contract expiry"
+            : "Date of retirement";
+          e.retirement = `${label} must be after the date of appointment`;
+        }
+      }
+
+      // Duties & Roles required
+      if (!form.dutiesRoles?.trim())
+        e.dutiesRoles = "Required — describe your duties and roles";
+
+      // Responsibilities required
+      if (!form.responsibilities?.trim())
+        e.responsibilities = "Required — describe your responsibilities";
+    }
+
+    // ── STEP 2: Qualifications ─────────────────────────────────────
+    if (step === 2) {
+      // KCSE always required
+      if (!form.kcseYear)
+        e.kcseYear = "KCSE year is required";
+      if (!form.kcseGrade?.trim())
+        e.kcseGrade = "KCSE grade is required";
+
+      // If any part of a qualification is entered, year and grade become required
+      const qualChecks = [
+        { name: "Certificate", nameKey: "certName", yearKey: "certYear", gradeKey: "certGrade" },
+        { name: "Diploma", nameKey: "diplomaName", yearKey: "diplomaYear", gradeKey: "diplomaGrade" },
+        { name: "Higher Diploma", nameKey: "hdipName", yearKey: "hdipYear", gradeKey: "hdipGrade" },
+        { name: "Degree", nameKey: "degreeName", yearKey: "degreeYear", gradeKey: "degreeGrade" },
+        { name: "Masters", nameKey: "mastersName", yearKey: "mastersYear", gradeKey: "mastersGrade" },
+        { name: "PhD", nameKey: "phdName", yearKey: "phdYear", gradeKey: "phdGrade" },
+      ];
+
+      qualChecks.forEach(({ name, nameKey, yearKey, gradeKey }) => {
+        const hasName = form[nameKey]?.trim();
+        const hasYear = form[yearKey];
+        const hasGrade = form[gradeKey]?.trim();
+        // If any field is filled, all three become required
+        if (hasName || hasYear || hasGrade) {
+          if (!hasName) e[nameKey] = `${name} institution name is required`;
+          if (!hasYear) e[yearKey] = `${name} year is required`;
+          if (!hasGrade) e[gradeKey] = `${name} grade is required`;
+        }
+      });
+    }
+
+    // ── STEP 3: Professional Development ──────────────────────────
+    if (step === 3) {
+      // TVETA required for Full Time Lecturers
+      if (form.designation === "Full Time Lecturer") {
+        if (!form.tvetaRegNo?.trim())
+          e.tvetaRegNo = "TVETA registration number is required for Full Time Lecturers";
+        if (!form.tvetaDate)
+          e.tvetaDate = "TVETA registration date is required";
+        if (!form.tvetaExpiry)
+          e.tvetaExpiry = "TVETA expiry date is required";
+      }
+
+      // If any prof dev course field is partially filled, require the rest
+      const profDevChecks = [
+        { name: "Pedagogy", yearKey: "pedagogyYear", gradeKey: "pedagogyGrade" },
+        { name: "ToT", yearKey: "totYear", gradeKey: "totGrade" },
+        { name: "Supervisory", yearKey: "supervYear", gradeKey: "supervGrade" },
+        { name: "Senior Management", yearKey: "seniorMgmtYear", gradeKey: "seniorMgmtGrade" },
+        { name: "SLDP", yearKey: "sldpYear", gradeKey: "sldpGrade" },
+        { name: "Retirement Course", yearKey: "retireCourseYear", gradeKey: "retireCourseGrade" },
+      ];
+
+      profDevChecks.forEach(({ name, yearKey, gradeKey }) => {
+        const hasYear = form[yearKey];
+        const hasGrade = form[gradeKey]?.trim();
+        if (hasYear && !hasGrade) e[gradeKey] = `${name} grade/score is required if year is entered`;
+        if (hasGrade && !hasYear) e[yearKey] = `${name} year is required if grade is entered`;
+      });
+
+      // Other courses — if desc entered, year and grade required
+      (form.otherCourses || []).forEach((course, index) => {
+        if (course.desc?.trim() || course.year || course.grade) {
+          //if (!course.desc?.trim()) e[`otherCourse_${index}_desc`] = `Course ${index + 1} name is required`;
+          //if (!course.year) e[`otherCourse_${index}_year`] = `Course ${index + 1} year is required`;
+          //if (!course.grade?.trim()) e[`otherCourse_${index}_grade`] = `Course ${index + 1} grade is required`;
+          { fieldMsg(`otherCourse_${index}_desc`) }
+          { fieldMsg(`otherCourse_${index}_year`) }
+          { fieldMsg(`otherCourse_${index}_grade`) }
+        }
+      });
+    }
+    const s = {};
+
+    // Step 0 successes
+    if (step === 0) {
+      if (form.fullName?.trim() && !e.fullName) s.fullName = "Looks good";
+      if (form.email?.trim() && !e.email) s.email = "Looks good";
+      if (form.nationalId?.trim() && !e.nationalId) s.nationalId = "Looks good";
+      if (form.gender && !e.gender) s.gender = "Looks good";
+      if (form.dobDay && form.dobMonth && form.dobYear && !e.dob) s.dob = "Looks good";
+      if (form.disability && !e.disability) s.disability = "Looks good";
+      if (form.disability === "Yes" && form.disabilityNature?.trim() && !e.disabilityNature) s.disabilityNature = "Looks good";
+    }
+
+    // Step 1 successes
+    if (step === 1) {
+      if (form.designation && !e.designation) s.designation = "Looks good";
+      if (form.department && !e.department) s.department = "Looks good";
+      if (form.personalNumber?.trim() && !e.personalNumber) s.personalNumber = "Looks good";
+      if (form.jobGroup && !e.jobGroup) s.jobGroup = "Looks good";
+      if (form.appointmentDay && form.appointmentMonth && form.appointmentYear && !e.appointment) s.appointment = "Looks good";
+      if (form.retirementDay && form.retirementMonth && form.retirementYear && !e.retirement) s.retirement = "Looks good";
+      if (form.dutiesRoles?.trim() && !e.dutiesRoles) s.dutiesRoles = "Looks good";
+      if (form.responsibilities?.trim() && !e.responsibilities) s.responsibilities = "Looks good";
+    }
+
+    // Step 2 successes
+    if (step === 2) {
+      if (form.kcseYear && !e.kcseYear) s.kcseYear = "Looks good";
+      if (form.kcseGrade && !e.kcseGrade) s.kcseGrade = "Looks good";
+      ["cert", "diploma", "hdip", "degree", "masters", "phd"].forEach(prefix => {
+        if (form[prefix + "Name"]?.trim() && !e[prefix + "Name"]) s[prefix + "Name"] = "Looks good";
+        if (form[prefix + "Year"] && !e[prefix + "Year"]) s[prefix + "Year"] = "Looks good";
+        if (form[prefix + "Grade"]?.trim() && !e[prefix + "Grade"]) s[prefix + "Grade"] = "Looks good";
+      });
+    }
+
+    // Step 3 successes
+    if (step === 3) {
+      if (form.tvetaRegNo?.trim() && !e.tvetaRegNo) s.tvetaRegNo = "Looks good";
+      if (form.tvetaDate && !e.tvetaDate) s.tvetaDate = "Looks good";
+      if (form.tvetaExpiry && !e.tvetaExpiry) s.tvetaExpiry = "Looks good";
+    }
+
+    setSuccesses(s);
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -751,116 +966,193 @@ function DataForm() {
           <div className="grid-2">
             <div className="field">
               <label className="label"><FaUser size={12} /> Full Name *</label>
-              <input {...inp("fullName")} style={{ borderColor: errors.fullName ? C.danger : C.border }} />
-              {errors.fullName && <span style={{ color: C.danger, fontSize: "0.72rem" }}>{errors.fullName}</span>}
+              <input {...inp("fullName")} style={{ borderColor: errors.fullName ? C.danger : successes.fullName ? C.success : C.border }} />
+              {fieldMsg("fullName")}
             </div>
             <div className="field">
               <label className="label"><FaEnvelope size={12} /> Email Address *</label>
-              <input type="email" {...inp("email")} style={{ borderColor: errors.email ? C.danger : C.border }} />
-              {errors.email && <span style={{ color: C.danger, fontSize: "0.72rem" }}>{errors.email}</span>}
+              <input type="email" {...inp("email")} style={{ borderColor: errors.email ? C.danger : successes.email ? C.success : C.border }} />
+              {fieldMsg("email")}
             </div>
           </div>
           <div className="grid-2">
             <div className="field">
               <label className="label"><FaIdCard size={12} /> National ID No. *</label>
-              <input {...inp("nationalId")} style={{ borderColor: errors.nationalId ? C.danger : C.border }} />
+              <input {...inp("nationalId")} style={{ borderColor: errors.nationalId ? C.danger : successes.nationalId ? C.success : C.border }} />
+              {fieldMsg("nationalId")}
             </div>
             <div className="field">
               <label className="label">Gender *</label>
-              <select {...inp("gender")} style={{ borderColor: errors.gender ? C.danger : C.border }}>
+              <select {...inp("gender")} style={{ borderColor: errors.gender ? C.danger : successes.gender ? C.success : C.border }}>
                 <option value="">Select…</option><option>Male</option><option>Female</option>
               </select>
+              {fieldMsg("gender")}
             </div>
           </div>
           <div className="grid-2">
-            <DateFields prefix="dob" label="Date of Birth" form={form} onChange={set} required />
             <div className="field">
-              <label className="label">Disability</label>
-              <select {...inp("disability")}>
+              <DateFields prefix="dob" label="Date of Birth *" form={form} onChange={set} />
+              {fieldMsg("dob")}
+            </div>
+            <div className="field">
+              <label className="label">Disability *</label>
+              <select {...inp("disability")} style={{ borderColor: errors.disability ? C.danger : successes.disability ? C.success : C.border }}>
                 <option value="">Select…</option><option>No</option><option>Yes</option>
               </select>
+              {fieldMsg("disability")}
             </div>
           </div>
-          {form.disability === "Yes" && <div className="field">
-            <label className="label">Nature of Disability</label>
-            <input {...inp("disabilityNature")} placeholder="Describe…" />
-          </div>}
+          {form.disability === "Yes" && (
+            <div className="field" style={{ marginBottom: "0.75rem" }}>
+              <label className="label">Nature of Disability *</label>
+              <input {...inp("disabilityNature")} placeholder="Describe…" style={{ borderColor: errors.disabilityNature ? C.danger : successes.disabilityNature ? C.success : C.border }} />
+              {fieldMsg("disabilityNature")}
+            </div>
+          )}
         </>}
 
+        {/* Employment Details Section */}
         {step === 1 && <>
           <div className="sec-title"><FaBriefcase size={12} /> Employment Details</div>
+
           <div className="grid-2">
             <div className="field">
               <label className="label">Designation *</label>
-              <select {...inp("designation")} style={{ borderColor: errors.designation ? C.danger : C.border }}>
+              <select {...inp("designation")} style={{ borderColor: errors.designation ? C.danger : successes.designation ? C.success : C.border }}>
                 <option value="">Select…</option>
                 {DESIGNATIONS.map(d => <option key={d}>{d}</option>)}
               </select>
+              {fieldMsg("designation")}
             </div>
             <div className="field">
               <label className="label">Department *</label>
-              <select {...inp("department")} style={{ borderColor: errors.department ? C.danger : C.border }}>
+              <select {...inp("department")} style={{ borderColor: errors.department ? C.danger : successes.department ? C.success : C.border }}>
                 <option value="">Select…</option>
                 {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
               </select>
+              {fieldMsg("department")}
             </div>
           </div>
+
           {["Full Time Lecturer", "Support Staff", "Intern"].includes(form.designation) && (
             <div className="field" style={{ marginBottom: "1rem" }}>
               <label className="label">Personal Number *</label>
-              <input {...inp("personalNumber")} placeholder="e.g. PN-12345" style={{ borderColor: errors.personalNumber ? C.danger : C.border }} />
-              {errors.personalNumber && <span style={{ color: C.danger, fontSize: "0.72rem" }}>{errors.personalNumber}</span>}
+              <input
+                {...inp("personalNumber")}
+                placeholder="Digits only e.g. 12345"
+                style={{ borderColor: errors.personalNumber ? C.danger : successes.personalNumber ? C.success : C.border }}
+              />
+              {fieldMsg("personalNumber")}
             </div>
           )}
+
           <div className="grid-2">
-            {!isPartTime && <div className="field">
-              <label className="label">Job Group</label>
-              <select {...inp("jobGroup")}>
-                <option value="">Select…</option>
-                {JOB_GROUPS.map(g => <option key={g}>Group {g}</option>)}
-              </select>
-            </div>}
-            <DateFields prefix="appointment" label="Date of Appointment" form={form} onChange={set} />
+            {!isPartTime && (
+              <div className="field">
+                <label className="label">Job Group {["Full Time Lecturer", "Support Staff"].includes(form.designation) ? "*" : ""}</label>
+                <select {...inp("jobGroup")} style={{ borderColor: errors.jobGroup ? C.danger : successes.jobGroup ? C.success : C.border }}>
+                  <option value="">Select…</option>
+                  {JOB_GROUPS.map(g => <option key={g}>Group {g}</option>)}
+                </select>
+                {fieldMsg("jobGroup")}
+              </div>
+            )}
+            <div className="field">
+              <DateFields prefix="appointment" label="Date of Appointment *" form={form} onChange={set} />
+              {fieldMsg("appointment")}
+            </div>
           </div>
+
           <div className="grid-2">
-            <DateFields prefix="retirement" label={isPartTime ? "Contract Expiry" : "Date of Retirement"} form={form} onChange={set} />
+            <div className="field">
+              <DateFields prefix="retirement" label={isPartTime ? "Contract Expiry *" : "Date of Retirement *"} form={form} onChange={set} />
+              {fieldMsg("retirement")}
+            </div>
           </div>
+
           <div className="field" style={{ marginBottom: "1rem" }}>
-            <label className="label">Duties & Roles (e.g. HOD, Deputy HOD, Internal Verifier)</label>
-            <input {...inp("dutiesRoles")} placeholder="e.g. HOD, Deputy HOD, Internal Verifier" />
+            <label className="label">Duties & Roles * (e.g. HOD, Deputy HOD, Internal Verifier)</label>
+            <input
+              {...inp("dutiesRoles")}
+              placeholder="e.g. HOD, Deputy HOD, Internal Verifier"
+              style={{ borderColor: errors.dutiesRoles ? C.danger : successes.dutiesRoles ? C.success : C.border }}
+            />
+            {fieldMsg("dutiesRoles")}
           </div>
+
           <div className="field">
-            <label className="label">Responsibilities</label>
-            <textarea {...inp("responsibilities")} placeholder="Describe your key responsibilities…" />
+            <label className="label">Responsibilities *</label>
+            <textarea
+              {...inp("responsibilities")}
+              placeholder="Describe your key responsibilities…"
+              style={{ borderColor: errors.responsibilities ? C.danger : successes.responsibilities ? C.success : C.border }}
+            />
+            {fieldMsg("responsibilities")}
           </div>
         </>}
 
+        {/* New Academic Qualifications Section */}
         {step === 2 && <>
           <div className="sec-title"><FaBook size={12} /> Academic Qualifications</div>
-          <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: "1rem" }}>Fill only qualifications you hold. Leave blank if not applicable.</p>
+          <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: "1rem" }}>
+            Fill only qualifications you hold. KCSE is required. For others, if you enter any field you must complete all three.
+          </p>
           {[
-            { label: "KCSE", prefix: "kcse", noName: true },
+            { label: "KCSE", prefix: "kcse", noName: true, required: true },
             { label: "Certificate", prefix: "cert" },
             { label: "Diploma", prefix: "diploma" },
             { label: "Higher Diploma", prefix: "hdip" },
             { label: "Degree", prefix: "degree" },
             { label: "Masters", prefix: "masters" },
             { label: "PhD", prefix: "phd" },
-          ].map(({ label, prefix, noName }) => (
+          ].map(({ label, prefix, noName, required }) => (
             <div key={prefix} style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
-              <div className="qual-label"><FaGraduationCap size={10} /> {label}</div>
+              <div className="qual-label">
+                <FaGraduationCap size={10} /> {label}{required && " *"}
+              </div>
               <div className="qual-row">
-                {!noName && <div className={"field qual-name"}>
-                  <label className="label">Name / Institution</label>
-                  <input value={form[prefix + "Name"] || ""} onChange={e => set(prefix + "Name", e.target.value)} />
-                </div>}
+                {!noName && (
+                  <div className="field qual-name">
+                    <label className="label">Name / Institution</label>
+                    <input
+                      value={form[prefix + "Name"] || ""}
+                      onChange={e => set(prefix + "Name", e.target.value)}
+                      style={{ borderColor: errors[prefix + "Name"] ? C.danger : successes[prefix + "Name"] ? C.success : C.border }}
+                    />
+                    {errors[prefix + "Name"] && (
+                      <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                        <FaExclamationTriangle size={10} />{errors[prefix + "Name"]}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div className="field">
-                  <label className="label">Year</label>
-                  <input type="number" placeholder="YYYY" value={form[prefix + "Year"] || ""} onChange={e => set(prefix + "Year", e.target.value)} />
+                  <label className="label">Year{required && " *"}</label>
+                  <input
+                    type="number"
+                    placeholder="YYYY"
+                    value={form[prefix + "Year"] || ""}
+                    onChange={e => set(prefix + "Year", e.target.value)}
+                    style={{ borderColor: errors[prefix + "Year"] ? C.danger : successes[prefix + "Year"] ? C.success : C.border }}
+                  />
+                  {errors[prefix + "Year"] && (
+                    <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                      <FaExclamationTriangle size={10} />{errors[prefix + "Year"]}
+                    </span>
+                  )}
                 </div>
                 <div className="field">
-                  <label className="label">Grade / Score</label>
-                  <input value={form[prefix + "Grade"] || ""} onChange={e => set(prefix + "Grade", e.target.value)} />
+                  <label className="label">Grade / Score{required && " *"}</label>
+                  <input
+                    value={form[prefix + "Grade"] || ""}
+                    onChange={e => set(prefix + "Grade", e.target.value)}
+                    style={{ borderColor: errors[prefix + "Grade"] ? C.danger : successes[prefix + "Grade"] ? C.success : C.border }}
+                  />
+                  {errors[prefix + "Grade"] && (
+                    <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                      <FaExclamationTriangle size={10} />{errors[prefix + "Grade"]}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -869,7 +1161,9 @@ function DataForm() {
 
         {step === 3 && <>
           <div className="sec-title"><FaChalkboardTeacher size={12} /> Professional Development</div>
-          <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: "1rem" }}>Complete only trainings/courses you have undertaken.</p>
+          <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: "1rem" }}>
+            Complete only trainings/courses you have undertaken. If you enter a year you must also enter a grade, and vice versa.
+          </p>
 
           {[
             { label: "Pedagogy", yk: "pedagogyYear", gk: "pedagogyGrade" },
@@ -884,11 +1178,31 @@ function DataForm() {
               <div className="grid-2" style={{ marginBottom: 0 }}>
                 <div className="field">
                   <label className="label">Year</label>
-                  <input type="number" placeholder="YYYY" value={form[yk] || ""} onChange={e => set(yk, e.target.value)} />
+                  <input
+                    type="number"
+                    placeholder="YYYY"
+                    value={form[yk] || ""}
+                    onChange={e => set(yk, e.target.value)}
+                    style={{ borderColor: errors[yk] ? C.danger : successes[yk] ? C.success : C.border }}
+                  />
+                  {errors[yk] && (
+                    <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                      <FaExclamationTriangle size={10} />{errors[yk]}
+                    </span>
+                  )}
                 </div>
                 <div className="field">
                   <label className="label">Grade / Score</label>
-                  <input value={form[gk] || ""} onChange={e => set(gk, e.target.value)} />
+                  <input
+                    value={form[gk] || ""}
+                    onChange={e => set(gk, e.target.value)}
+                    style={{ borderColor: errors[gk] ? C.danger : successes[gk] ? C.success : C.border }}
+                  />
+                  {errors[gk] && (
+                    <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                      <FaExclamationTriangle size={10} />{errors[gk]}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -899,7 +1213,7 @@ function DataForm() {
             <div className="qual-label"><FaCertificate size={10} /> Any Other Course(s)</div>
 
             {(form.otherCourses || []).map((course, index) => (
-              <div key={index} style={{ background: C.light, borderRadius: 8, padding: "0.75rem", marginBottom: "0.6rem", border: `1px solid ${C.border}` }}>
+              <div key={index} style={{ background: C.light, borderRadius: 8, padding: "0.75rem", marginBottom: "0.6rem", border: `1px solid ${errors[`otherCourse_${index}_desc`] || errors[`otherCourse_${index}_year`] || errors[`otherCourse_${index}_grade`] ? C.danger : C.border}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                   <span style={{ fontFamily: "sans-serif", fontSize: "0.75rem", fontWeight: 700, color: C.primary }}>
                     Course {index + 1}
@@ -922,7 +1236,13 @@ function DataForm() {
                       set("otherCourses", updated);
                     }}
                     placeholder="e.g. Project Management, Leadership Training…"
+                    style={{ borderColor: errors[`otherCourse_${index}_desc`] ? C.danger : successes[`otherCourse_${index}_desc`] ? C.success : C.border }}
                   />
+                  {errors[`otherCourse_${index}_desc`] && (
+                    <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                      <FaExclamationTriangle size={10} />{errors[`otherCourse_${index}_desc`]}
+                    </span>
+                  )}
                 </div>
                 <div className="grid-2" style={{ marginBottom: 0 }}>
                   <div className="field">
@@ -936,7 +1256,13 @@ function DataForm() {
                         updated[index] = { ...updated[index], year: e.target.value };
                         set("otherCourses", updated);
                       }}
+                      style={{ borderColor: errors[`otherCourse_${index}_year`] ? C.danger : successes[`otherCourse_${index}_year`] ? C.success : C.border }}
                     />
+                    {errors[`otherCourse_${index}_year`] && (
+                      <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                        <FaExclamationTriangle size={10} />{errors[`otherCourse_${index}_year`]}
+                      </span>
+                    )}
                   </div>
                   <div className="field">
                     <label className="label">Grade / Score</label>
@@ -948,7 +1274,13 @@ function DataForm() {
                         set("otherCourses", updated);
                       }}
                       placeholder="e.g. Pass / 78%"
+                      style={{ borderColor: errors[`otherCourse_${index}_grade`] ? C.danger : successes[`otherCourse_${index}_grade`] ? C.success : C.border }}
                     />
+                    {errors[`otherCourse_${index}_grade`] && (
+                      <span style={{ color: C.danger, fontSize: "0.7rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                        <FaExclamationTriangle size={10} />{errors[`otherCourse_${index}_grade`]}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -964,19 +1296,48 @@ function DataForm() {
             </button>
           </div>
 
-          <div className="sec-title" style={{ marginTop: "1.5rem" }}><FaCertificate size={12} /> TVETA Registration</div>
+          {/* TVETA Registration */}
+          <div className="sec-title" style={{ marginTop: "1.5rem" }}>
+            <FaCertificate size={12} /> TVETA Registration
+            {form.designation === "Full Time Lecturer" && (
+              <span style={{ fontFamily: "sans-serif", fontSize: "0.65rem", color: C.danger, marginLeft: 6, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
+                * Required for Full Time Lecturers
+              </span>
+            )}
+          </div>
           <div className="grid-3">
             <div className="field">
-              <label className="label">Date of Registration</label>
-              <input type="date" {...inp("tvetaDate")} />
+              <label className="label">
+                Date of Registration{form.designation === "Full Time Lecturer" && " *"}
+              </label>
+              <input
+                type="date"
+                {...inp("tvetaDate")}
+                style={{ borderColor: errors.tvetaDate ? C.danger : successes.tvetaDate ? C.success : C.border }}
+              />
+              {fieldMsg("tvetaDate")}
             </div>
             <div className="field">
-              <label className="label">Expiry Date</label>
-              <input type="date" {...inp("tvetaExpiry")} />
+              <label className="label">
+                Expiry Date{form.designation === "Full Time Lecturer" && " *"}
+              </label>
+              <input
+                type="date"
+                {...inp("tvetaExpiry")}
+                style={{ borderColor: errors.tvetaExpiry ? C.danger : successes.tvetaExpiry ? C.success : C.border }}
+              />
+              {fieldMsg("tvetaExpiry")}
             </div>
             <div className="field">
-              <label className="label">Registration Number</label>
-              <input {...inp("tvetaRegNo")} placeholder="e.g. TVETA/2023/…" />
+              <label className="label">
+                Registration Number{form.designation === "Full Time Lecturer" && " *"}
+              </label>
+              <input
+                {...inp("tvetaRegNo")}
+                placeholder="e.g. TVETA/2023/…"
+                style={{ borderColor: errors.tvetaRegNo ? C.danger : successes.tvetaRegNo ? C.success : C.border }}
+              />
+              {fieldMsg("tvetaRegNo")}
             </div>
           </div>
         </>}
