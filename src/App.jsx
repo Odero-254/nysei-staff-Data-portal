@@ -1119,7 +1119,7 @@ function DataForm() {
               <div className="qual-row">
                 {!noName && (
                   <div className="field qual-name">
-                    <label className="label">Name / Institution</label>
+                    <label className="label">Name of Certification / Qualification and the Issuing Institution</label>
                     <input
                       value={form[prefix + "Name"] || ""}
                       onChange={e => set(prefix + "Name", e.target.value)}
