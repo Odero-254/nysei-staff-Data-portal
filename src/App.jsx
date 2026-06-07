@@ -417,7 +417,10 @@ function PrintRecord({ r }) {
 
       <div className="print-name-bar">
         <h2>{r.full_name}</h2>
-        <span>Printed: {new Date().toLocaleDateString("en-KE", { day: "2-digit", month: "long", year: "numeric" })}</span>
+        <span>Printed: {new Date().toLocaleString("en-KE", {
+          day: "2-digit", month: "long", year: "numeric",
+          hour: "2-digit", minute: "2-digit", hour12: true
+        })}</span>
       </div>
 
       <div className="print-badges">
@@ -502,7 +505,10 @@ function PrintRecord({ r }) {
 
       <div className="print-footer">
         <span>National Youth Service Engineering Institute — Staff Data Platform</span>
-        <span>Record ID: {r.id} | Submitted: {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-KE") : "—"}</span>
+        <span>Record ID: {r.id} | Submitted: {r.submitted_at ? new Date(r.submitted_at).toLocaleString("en-KE", {
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit", hour12: true
+        }) : "—"}</span>
       </div>
     </div>
   );
@@ -2078,7 +2084,10 @@ function Dashboard({ admin, onLogout }) {
                             <td>{row.gender === "Male" ? <FaMale color="#4A90E2" /> : <FaFemale color="#E25A6E" />} {row.gender}</td>
                             <td>{row.department}</td>
                             <td><span className="badge">{row.designation}</span></td>
-                            <td className="tbl-hide-mobile" style={{ whiteSpace: "nowrap" }}>{row.submitted_at ? new Date(row.submitted_at).toLocaleDateString() : "—"}</td>
+                            <td className="tbl-hide-mobile" style={{ whiteSpace: "nowrap" }}>{row.submitted_at ? new Date(row.submitted_at).toLocaleString("en-KE", {
+                              day: "2-digit", month: "short", year: "numeric",
+                              hour: "2-digit", minute: "2-digit", hour12: true
+                            }) : "—"}</td>
                             <td>
                               <div style={{ display: "flex", gap: "5px" }}>
                                 <button className="btn-outline" style={{ padding: "4px 10px" }} onClick={() => setSelected(row)}>
@@ -2123,7 +2132,10 @@ function Dashboard({ admin, onLogout }) {
                         <div><div className="rec-field-lbl">Gender</div><div className="rec-field-val" style={{ display: "flex", alignItems: "center", gap: 3 }}>{row.gender === "Male" ? <FaMale style={{ color: "#2563EB" }} /> : <FaFemale style={{ color: "#DB2777" }} />}{row.gender}</div></div>
                         <div><div className="rec-field-lbl">Department</div><div className="rec-field-val">{row.department}</div></div>
                         <div><div className="rec-field-lbl">Designation</div><div className="rec-field-val"><span className="badge">{row.designation}</span></div></div>
-                        <div><div className="rec-field-lbl">Submitted</div><div className="rec-field-val">{row.submitted_at ? new Date(row.submitted_at).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</div></div>
+                        <div><div className="rec-field-lbl">Submitted</div><div className="rec-field-val">{row.submitted_at ? new Date(row.submitted_at).toLocaleString("en-KE", {
+                          day: "2-digit", month: "short", year: "numeric",
+                          hour: "2-digit", minute: "2-digit", hour12: true
+                        }) : "—"}</div></div>
                       </div>
                       <div className="rec-card-footer">
                         <button className="btn-outline" style={{ padding: "6px 12px", fontSize: "0.78rem" }} onClick={() => setSelected(row)}><FaEye /> View</button>
