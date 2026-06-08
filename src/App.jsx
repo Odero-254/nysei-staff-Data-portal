@@ -1653,10 +1653,15 @@ function Dashboard({ admin, onLogout }) {
   };
 
   const handlePrint = () => {
+  const originalTitle = document.title;
+  document.title = `${selected.full_name} — NYSEI Staff Record`;
+  setTimeout(() => {
+    window.print();
     setTimeout(() => {
-      window.print();
-    }, 100);
-  };
+      document.title = originalTitle;
+    }, 1000);
+  }, 100);
+};
 
   // Full CSV export with every field
   const exportCSV = () => {
