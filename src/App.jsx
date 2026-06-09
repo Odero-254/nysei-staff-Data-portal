@@ -12,7 +12,7 @@ import {
   FaSortUp, FaSortDown, FaFilter, FaSearch, FaChartLine, FaChartPie,
   FaRegCalendarAlt, FaClock, FaArrowUp, FaPercent, FaTrash, FaSpinner,
   FaQuestionCircle, FaBan, FaPrint, FaEyeSlash, FaInfoCircle, FaSave,
-  FaDatabase, FaFileExport, FaRegCheckCircle
+  FaDatabase, FaFileExport, FaRegCheckCircle, FaFileDownload
 } from 'react-icons/fa';
 import { MdAnalytics, MdRecordVoiceOver, MdTimeline } from 'react-icons/md';
 import {
@@ -1570,8 +1570,13 @@ function Dashboard({ admin, onLogout }) {
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [deleting, setDeleting] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null, name: "" });
+  const [downloadConfirm, setDownloadConfirm] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [printRecord, setPrintRecord] = useState(null);
+  const [downloading, setDownloading] = useState(false);
+  const [printAllConfirm, setPrintAllConfirm] = useState(false);
+  const [printingAll, setPrintingAll] = useState(false);
 
   const showToast = (message, type) => {
     setToast({ message, type });
@@ -1782,11 +1787,186 @@ function Dashboard({ admin, onLogout }) {
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh" }}>
-      {/* Toast Notification */}
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+     {/* Toast Notification */}
+{       toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* Print area — hidden on screen, shown when printing */}
-      {selected && <PrintRecord r={selected} />}
+      {/* Download Confirmation Modal */}   {/* ← add this entire block here */}
+        {downloadConfirm && (
+          <div className="overlay" style={{ zIndex: 200 }} onClick={() => setDownloadConfirm(null)}>
+            <div style={{
+              background: C.white, borderRadius: 12, maxWidth: 380, width: "100%",
+              margin: "auto", padding: "1.75rem", textAlign: "center"
+            }} onClick={e => e.stopPropagation()}>
+              <div style={{
+                width: 64, height: 64, borderRadius: "50%", background: C.light,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 1rem", color: C.primary, fontSize: "1.75rem"
+              }}>
+                <FaFileDownload />
+              </div>
+              <h3 style={{ fontFamily: "sans-serif", color: C.primary, marginBottom: 8 }}>
+                Download Staff Record
+              </h3>
+              <p style={{ fontFamily: "sans-serif", fontSize: "0.85rem", color: C.muted, marginBottom: 4, lineHeight: 1.5 }}>
+                You are about to download the confidential staff record for:
+              </p>
+              <p style={{ fontFamily: "sans-serif", fontSize: "1rem", fontWeight: 700, color: C.primary, marginBottom: "0.5rem" }}>
+                {downloadConfirm.full_name}
+              </p>
+              <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted, marginBottom: "1.5rem" }}>
+                {downloadConfirm.designation} — {downloadConfirm.department}
+              </p>
+              <div style={{
+                background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8,
+                padding: "0.75rem 1rem", marginBottom: "1.5rem", display: "flex",
+                alignItems: "flex-start", gap: 8, textAlign: "left"
+              }}>
+                <FaExclamationTriangle size={14} style={{ color: C.warning, flexShrink: 0, marginTop: 2 }} />
+                <span style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: "#92400E" }}>
+                  This document is confidential. Please handle with care and do not share with unauthorised persons.
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                <button className="btn-outline" onClick={() => setDownloadConfirm(null)}>
+                  <FaTimes size={12} /> Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    const record = downloadConfirm;
+                    setDownloadConfirm(null);
+                    setDownloading(true);
+                    setPrintRecord(record);
+                    setTimeout(() => {
+                      const originalTitle = document.title;
+                      document.title = `${record.full_name} — NYSEI Staff Record`;
+                      window.print();
+                      setTimeout(() => {
+                        document.title = originalTitle;
+                        setPrintRecord(null);
+                        setDownloading(false);
+                      }, 1500);
+                    }, 400);
+                  }}
+                >
+                  <FaFileDownload size={12} /> Download PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Print All Confirmation Modal */}
+          {printAllConfirm && (
+            <div className="overlay" style={{ zIndex: 200 }} onClick={() => setPrintAllConfirm(false)}>
+              <div style={{
+                background: C.white, borderRadius: 12, maxWidth: 400, width: "100%",
+                margin: "auto", padding: "1.75rem", textAlign: "center"
+              }} onClick={e => e.stopPropagation()}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: "50%", background: C.light,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 1rem", color: C.primary, fontSize: "1.75rem"
+                }}>
+                  <FaFileDownload />
+                </div>
+                <h3 style={{ fontFamily: "sans-serif", color: C.primary, marginBottom: 8 }}>
+                  Print All Staff Records
+                </h3>
+                <p style={{ fontFamily: "sans-serif", fontSize: "0.85rem", color: C.muted, marginBottom: 4, lineHeight: 1.5 }}>
+                  This will generate a PDF containing individual records for:
+                </p>
+                <p style={{ fontFamily: "sans-serif", fontSize: "1.1rem", fontWeight: 700, color: C.primary, marginBottom: "0.5rem" }}>
+                  {filtered.length} staff member{filtered.length !== 1 ? "s" : ""}
+                </p>
+                {filtered.length !== data.length && (
+                  <p style={{ fontFamily: "sans-serif", fontSize: "0.75rem", color: C.accent, marginBottom: "0.5rem" }}>
+                    Note: Based on your current filters. {data.length - filtered.length} record{data.length - filtered.length !== 1 ? "s" : ""} excluded by filters.
+                  </p>
+                )}
+                <div style={{
+                  background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8,
+                  padding: "0.75rem 1rem", marginBottom: "1.5rem", display: "flex",
+                  alignItems: "flex-start", gap: 8, textAlign: "left"
+                }}>
+                  <FaExclamationTriangle size={14} style={{ color: C.warning, flexShrink: 0, marginTop: 2 }} />
+                  <span style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: "#92400E" }}>
+                    This document is confidential and contains personal staff data. Handle with care.
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                  <button className="btn-outline" onClick={() => setPrintAllConfirm(false)}>
+                    <FaTimes size={12} /> Cancel
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setPrintAllConfirm(false);
+                      setPrintingAll(true);
+                      setTimeout(() => {
+                        const originalTitle = document.title;
+                        document.title = `NYSEI — All Staff Records (${filtered.length})`;
+                        window.print();
+                        setTimeout(() => {
+                          document.title = originalTitle;
+                          setPrintingAll(false);
+                        }, 1500);
+                      }, 800);
+                    }}
+                  >
+                    <FaFileDownload size={12} /> Print All PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+      
+
+      {/* Print area */}
+        {(selected || printRecord) && <PrintRecord r={printRecord || selected}/>}
+
+        {/* Print area — all records */}
+          {printingAll && (
+            <div className="print-only">
+              {filtered.map((r, index) => (
+                <div key={r.id} style={{ pageBreakAfter: index < filtered.length - 1 ? "always" : "auto" }}>
+                  <PrintRecord r={r} />
+                </div>
+              ))}
+            </div>
+          )}
+
+        {/* Downloading animation overlay */}
+          {downloading && (
+            <div className="no-print" style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
+              zIndex: 300, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center", gap: 20
+            }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: "50%",
+                border: "5px solid rgba(255,255,255,0.2)",
+                borderTop: "5px solid #fff",
+                animation: "spin 0.8s linear infinite"
+              }} />
+              <div style={{ marginTop: -8 }}>
+                <FaFileDownload size={22} style={{ color: "#fff", opacity: 0.9 }} />
+              </div>
+              <div style={{
+                fontFamily: "sans-serif", color: "#fff",
+                fontSize: "0.95rem", fontWeight: 600, letterSpacing: "0.03em"
+              }}>
+                Preparing PDF…
+              </div>
+              <div style={{
+                fontFamily: "sans-serif", color: "rgba(255,255,255,0.65)",
+                fontSize: "0.78rem"
+              }}>
+                Your download will begin shortly
+              </div>
+            </div>
+          )}
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}
@@ -1810,6 +1990,17 @@ function Dashboard({ admin, onLogout }) {
           <button className="btn-outline" style={{ padding: "6px 10px", fontSize: "0.75rem" }} onClick={exportCSV} disabled={!data.length}>
             <FaFileExport /><span className="hide-sm"> Export CSV</span>
           </button>
+
+            {/* Print All Records button */}
+            <button
+              className="btn-outline"
+              style={{ padding: "6px 10px", fontSize: "0.75rem" }}
+              onClick={() => setPrintAllConfirm(true)}
+              disabled={!data.length}
+            >
+              <FaFileDownload /><span className="hide-sm"> Print All</span>
+            </button>
+
           <FaUserShield size={14} style={{ color: C.muted }} />
           <span style={{ color: C.muted }}>{admin.name}</span>
           <button className="btn-outline" style={{ padding: "5px 12px" }} onClick={onLogout}>
@@ -2094,7 +2285,7 @@ function Dashboard({ admin, onLogout }) {
                               hour: "2-digit", minute: "2-digit", hour12: true
                             }) : "—"}</td>
                             <td>
-                              <div style={{ display: "flex", gap: "5px" }}>
+                              <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
                                 <button className="btn-outline" style={{ padding: "4px 10px" }} onClick={() => setSelected(row)}>
                                   <FaEye size={10} /> View
                                 </button>
@@ -2106,6 +2297,15 @@ function Dashboard({ admin, onLogout }) {
                                 >
                                   {deleting === row.id ? <FaSpinner className="spin" size={10} /> : <FaTrash size={10} />}
                                   {" Delete"}
+                                </button>
+                                <button
+                                  title={`Download ${row.full_name}'s record`}
+                                  onClick={() => setDownloadConfirm(row)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: "4px 6px", display: "flex", alignItems: "center", borderRadius: 6 }}
+                                  onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                                  onMouseLeave={e => e.currentTarget.style.color = C.muted}
+                                >
+                                  <FaDownload size={14} />
                                 </button>
                               </div>
                             </td>
@@ -2143,11 +2343,20 @@ function Dashboard({ admin, onLogout }) {
                         }) : "—"}</div></div>
                       </div>
                       <div className="rec-card-footer">
-                        <button className="btn-outline" style={{ padding: "6px 12px", fontSize: "0.78rem" }} onClick={() => setSelected(row)}><FaEye /> View</button>
-                        <button className="btn-danger" style={{ padding: "6px 12px", fontSize: "0.78rem" }} onClick={() => openConfirmModal(row.id, row.full_name)} disabled={deleting === row.id}>
-                          {deleting === row.id ? <FaSpinner className="spin" /> : <FaTrash />} Delete
-                        </button>
-                      </div>
+                      <button className="btn-outline" style={{padding:"6px 12px",fontSize:"0.78rem"}} onClick={()=>setSelected(row)}><FaEye/> View</button>
+                      <button className="btn-danger" style={{padding:"6px 12px",fontSize:"0.78rem"}} onClick={()=>openConfirmModal(row.id,row.full_name)} disabled={deleting===row.id}>
+                        {deleting===row.id?<FaSpinner className="spin"/>:<FaTrash/>} Delete
+                      </button>
+                      <button
+                      title={`Download ${row.full_name}'s record`}
+                      onClick={() => setDownloadConfirm(row)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: "4px 6px", display: "flex", alignItems: "center", borderRadius: 6 }}
+                      onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                      onMouseLeave={e => e.currentTarget.style.color = C.muted}
+                    >
+                      <FaDownload size={14} />
+                    </button>
+                    </div>
                     </div>
                   ))
               }
