@@ -1,0 +1,1179 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "./supabase";
+import {
+  FaUsers, FaMale, FaFemale, FaWheelchair, FaGraduationCap, FaRegFileAlt,
+  FaChartBar, FaTable, FaSignOutAlt, FaUserShield,
+  FaCalendarAlt, FaBuilding, FaUserTie, FaIdCard, FaBriefcase,
+  FaBook, FaCertificate, FaChalkboardTeacher, FaClipboardList,
+  FaArrowLeft, FaArrowRight, FaSave, FaEye, FaSearch,
+  FaTimes, FaSpinner, FaExclamationTriangle, FaInfoCircle,
+  FaUser, FaLock, FaDatabase, FaFileExport, FaPrint,
+  FaRegCheckCircle, FaCheck, FaTrash,
+} from "react-icons/fa";
+
+const LOGO = "data:image/png;base64,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";
+
+const ADMINS = {
+  "deputy.principal": { password: "nysei2024", role: "Deputy Principal", name: "Deputy Principal" },
+  "principal":        { password: "nysei2024", role: "Principal",        name: "Principal"        },
+};
+
+const DEPARTMENTS  = ["Electrical","Built Environment","AutoCP","Mechanical","Computing Informatics","Aeronautical"];
+const DESIGNATIONS = ["Full Time Lecturer","Support Staff","Part Time Lecturer","Intern","Teaching Practice"];
+const JOB_GROUPS   = ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V"];
+const MONTHS       = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const STEPS        = ["Personal","Employment","Qualifications","Prof. Dev","Review"];
+
+const C = {
+  primary:"#1B3A2D", accent:"#C8922A", light:"#EFF4F1",
+  bg:"#F3F5F2", white:"#FFFFFF", text:"#1A2A22",
+  muted:"#5A7060", border:"#C8D4CB", success:"#1B5E36", danger:"#9B1C1C",
+};
+
+// ── ALL EXPORT COLUMNS (human-readable label → db key) ────────────────────────
+const EXPORT_COLUMNS = [
+  ["Full Name","full_name"],["Gender","gender"],["National ID","national_id"],
+  ["DOB Day","dob_day"],["DOB Month","dob_month"],["DOB Year","dob_year"],
+  ["Disability","disability"],["Disability Nature","disability_nature"],
+  ["Job Group","job_group"],["Designation","designation"],["Department","department"],
+  ["Appointment Day","appointment_day"],["Appointment Month","appointment_month"],["Appointment Year","appointment_year"],
+  ["Retirement/Expiry Day","retirement_day"],["Retirement/Expiry Month","retirement_month"],["Retirement/Expiry Year","retirement_year"],
+  ["Duties & Roles","duties_roles"],["Responsibilities","responsibilities"],
+  ["KCSE Year","kcse_year"],["KCSE Grade","kcse_grade"],
+  ["Certificate Name","cert_name"],["Certificate Year","cert_year"],["Certificate Grade","cert_grade"],
+  ["Diploma Name","diploma_name"],["Diploma Year","diploma_year"],["Diploma Grade","diploma_grade"],
+  ["Higher Diploma Name","hdip_name"],["Higher Diploma Year","hdip_year"],["Higher Diploma Grade","hdip_grade"],
+  ["Degree Name","degree_name"],["Degree Year","degree_year"],["Degree Grade","degree_grade"],
+  ["Masters Name","masters_name"],["Masters Year","masters_year"],["Masters Grade","masters_grade"],
+  ["PhD Name","phd_name"],["PhD Year","phd_year"],["PhD Grade","phd_grade"],
+  ["Pedagogy Year","pedagogy_year"],["Pedagogy Grade","pedagogy_grade"],
+  ["ToT Year","tot_year"],["ToT Grade","tot_grade"],
+  ["Supervisory Year","superv_year"],["Supervisory Grade","superv_grade"],
+  ["SLDP Year","sldp_year"],["SLDP Grade","sldp_grade"],
+  ["Retirement Course Year","retire_course_year"],["Retirement Course Grade","retire_course_grade"],
+  ["TVETA Reg No.","tveta_reg_no"],["TVETA Date Registered","tveta_date"],["TVETA Expiry","tveta_expiry"],
+  ["Submitted At","submitted_at"],
+];
+
+const css = `
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', serif; background: ${C.bg}; color: ${C.text}; }
+  .app { min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header { background: ${C.primary}; color: #fff; border-bottom: 4px solid ${C.accent}; position: sticky; top: 0; z-index: 50; }
+  .header-inner { max-width: 1100px; margin: 0 auto; padding: 0 1rem; display: flex; align-items: center; justify-content: space-between; min-height: 64px; }
+  .header-logo { display: flex; align-items: center; gap: 10px; }
+  .header-logo img { width: 46px; height: 46px; object-fit: contain; flex-shrink: 0; }
+  .header-title { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.05em; line-height: 1.2; }
+  .header-sub { font-size: 0.6rem; opacity: 0.72; letter-spacing: 0.12em; text-transform: uppercase; font-family: sans-serif; }
+  .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 860px; margin: 0 auto; padding: 1.25rem 1rem; }
+  .container-wide { max-width: 1100px; margin: 0 auto; padding: 1.25rem 1rem; }
+  .card { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
+
+  /* ── TYPOGRAPHY ── */
+  .sec-title { font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: ${C.accent}; font-family: sans-serif; font-weight: 700; margin-bottom: 1rem; padding-bottom: 6px; border-bottom: 2px solid ${C.accent}; display: flex; align-items: center; gap: 6px; }
+  .page-header { margin-bottom: 1.25rem; }
+  .page-header h2 { font-family: sans-serif; font-size: 1.1rem; color: ${C.primary}; display: flex; align-items: center; gap: 8px; }
+  .page-header p { font-family: sans-serif; font-size: 0.78rem; color: ${C.muted}; margin-top: 3px; }
+
+  /* ── FORM ── */
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .label { font-size: 0.73rem; font-weight: 600; color: ${C.muted}; font-family: sans-serif; letter-spacing: 0.02em; display: flex; align-items: center; gap: 5px; }
+  input, select, textarea { border: 1px solid ${C.border}; border-radius: 6px; padding: 9px 12px; font-size: 0.88rem; font-family: sans-serif; background: ${C.white}; color: ${C.text}; outline: none; width: 100%; transition: border-color 0.15s; -webkit-appearance: none; }
+  input:focus, select:focus, textarea:focus { border-color: ${C.primary}; box-shadow: 0 0 0 3px rgba(27,58,45,0.09); }
+  textarea { min-height: 80px; resize: vertical; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A7060' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+
+  /* ── GRIDS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+  .grid-stat { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+
+  /* ── BUTTONS ── */
+  .btn { background: ${C.primary}; color: #fff; border: none; border-radius: 7px; padding: 10px 20px; font-size: 0.86rem; font-family: sans-serif; cursor: pointer; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px; transition: background 0.15s; touch-action: manipulation; }
+  .btn:hover { background: #254d3c; }
+  .btn:active { opacity: 0.82; }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-accent { background: ${C.accent}; color: #fff; border: none; border-radius: 7px; padding: 10px 20px; font-size: 0.86rem; font-family: sans-serif; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; transition: background 0.15s; touch-action: manipulation; }
+  .btn-accent:hover { background: #b07e23; }
+  .btn-accent:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-outline { background: transparent; color: ${C.primary}; border: 1.5px solid ${C.primary}; border-radius: 7px; padding: 8px 14px; font-size: 0.8rem; font-family: sans-serif; cursor: pointer; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; touch-action: manipulation; }
+  .btn-outline:hover { background: ${C.light}; }
+  .btn-ghost { background: transparent; color: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.32); border-radius: 7px; padding: 7px 12px; font-size: 0.76rem; font-family: sans-serif; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; touch-action: manipulation; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+  .btn-danger { background: ${C.danger}; color: #fff; border: none; border-radius: 7px; padding: 7px 12px; font-size: 0.78rem; font-family: sans-serif; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; touch-action: manipulation; }
+  .btn-danger:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-icon { background: transparent; border: 1.5px solid ${C.border}; color: ${C.primary}; border-radius: 7px; padding: 7px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation; }
+  .btn-icon:hover { background: ${C.light}; }
+  .btn-icon-danger { color: ${C.danger}; border-color: ${C.danger}; }
+  .btn-icon-danger:hover { background: #fef2f2; }
+
+  /* ── STEPS ── */
+  .steps { display: flex; gap: 3px; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .steps::-webkit-scrollbar { display: none; }
+  .step-item { flex: 1; min-width: 66px; padding: 7px 3px; text-align: center; font-size: 0.67rem; font-weight: 600; border-radius: 6px; font-family: sans-serif; white-space: nowrap; transition: all 0.2s; border: 1.5px solid ${C.border}; display: flex; align-items: center; justify-content: center; gap: 3px; }
+  .step-active { background: ${C.primary}; color: #fff; border-color: ${C.primary}; }
+  .step-done   { background: ${C.success}; color: #fff; border-color: ${C.success}; }
+  .step-idle   { background: ${C.light};   color: ${C.muted}; }
+
+  /* ── ALERTS ── */
+  .alert-success { background: #ECFDF5; border: 1px solid #A7F3D0; color: ${C.success}; border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.83rem; font-family: sans-serif; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 8px; }
+  .alert-danger  { background: #FEF2F2; border: 1px solid #FECACA; color: ${C.danger};  border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.83rem; font-family: sans-serif; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 8px; }
+  .alert-warn    { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E;       border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.8rem;  font-family: sans-serif; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 8px; }
+
+  /* ── STAT CARDS ── */
+  .stat-card { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 10px; padding: 1rem 1.1rem; display: flex; align-items: center; gap: 10px; transition: box-shadow 0.2s; }
+  .stat-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
+  .stat-icon { width: 40px; height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+  .stat-label { font-family: sans-serif; font-size: 0.62rem; color: ${C.muted}; text-transform: uppercase; letter-spacing: 0.09em; }
+  .stat-val   { font-family: sans-serif; font-size: 1.55rem; font-weight: 700; color: ${C.primary}; line-height: 1.1; }
+
+  /* ── BAR CHART ── */
+  .bar-bg   { background: ${C.light}; border-radius: 4px; height: 8px; }
+  .bar-fill { background: ${C.primary}; height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+  /* ── TABLE ── */
+  .tbl { width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 0.8rem; }
+  .tbl th { padding: 9px 10px; text-align: left; color: ${C.muted}; font-weight: 700; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; background: ${C.light}; white-space: nowrap; }
+  .tbl td { padding: 8px 10px; border-bottom: 1px solid ${C.border}; vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: #f8fbf9; }
+  .tbl-actions { display: flex; gap: 5px; align-items: center; }
+
+  /* ── MOBILE CARDS (records on small screen) ── */
+  .rec-card { background: ${C.white}; border: 1px solid ${C.border}; border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; }
+  .rec-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.6rem; }
+  .rec-avatar { width: 36px; height: 36px; border-radius: 50%; background: ${C.light}; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 700; color: ${C.primary}; flex-shrink: 0; }
+  .rec-card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-family: sans-serif; font-size: 0.78rem; margin-bottom: 0.75rem; }
+  .rec-field-lbl { color: ${C.muted}; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .rec-field-val { color: ${C.text}; font-weight: 500; }
+  .rec-card-footer { display: flex; gap: 6px; justify-content: flex-end; }
+
+  /* ── MODAL ── */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.54); z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 0.75rem; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .modal { background: ${C.white}; border-radius: 12px; max-width: 680px; width: 100%; margin: auto; padding: 1.5rem; }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 2px solid ${C.accent}; gap: 8px; }
+  .modal-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+  /* ── CONFIRM MODAL ── */
+  .confirm-modal { background: ${C.white}; border-radius: 12px; max-width: 380px; width: 100%; margin: auto; padding: 1.5rem; text-align: center; }
+
+  /* ── REVIEW ROWS ── */
+  .rev-row { display: flex; border-bottom: 1px solid ${C.border}; padding: 5px 0; font-family: sans-serif; font-size: 0.81rem; }
+  .rev-key { width: 185px; flex-shrink: 0; color: ${C.muted}; display: flex; align-items: flex-start; gap: 5px; padding-top: 1px; }
+  .rev-val { color: ${C.text}; font-weight: 500; flex: 1; word-break: break-word; }
+
+  /* ── NAV ── */
+  .nav-bar  { background: ${C.white}; border-bottom: 1px solid ${C.border}; padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .nav-tabs { display: flex; gap: 6px; }
+  .nav-user { display: flex; align-items: center; gap: 8px; font-family: sans-serif; font-size: 0.8rem; }
+
+  /* ── BADGES ── */
+  .badge        { background: ${C.light}; padding: 3px 9px; border-radius: 4px; font-size: 0.71rem; font-family: sans-serif; color: ${C.primary}; font-weight: 600; }
+  .badge-accent { background: ${C.accent}; color: #fff; font-size: 0.65rem; padding: 3px 10px; border-radius: 99px; letter-spacing: 0.07em; text-transform: uppercase; font-family: sans-serif; }
+  .badge-green  { background: #d1fae5; color: ${C.success}; padding: 3px 9px; border-radius: 4px; font-size: 0.71rem; font-family: sans-serif; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+
+  /* ── MISC ── */
+  .spin { animation: spin 0.75s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .search-wrap { position: relative; flex: 1; min-width: 160px; }
+  .search-wrap input { padding-left: 32px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: ${C.muted}; font-size: 0.82rem; pointer-events: none; }
+  .qual-row   { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px solid ${C.border}; }
+  .qual-label { font-family: sans-serif; font-size: 0.82rem; font-weight: 700; color: ${C.primary}; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .date-row { display: flex; gap: 6px; }
+  .date-dd  { width: 56px !important; flex-shrink: 0; }
+  .date-mm  { flex: 1 !important; }
+  .date-yy  { width: 64px !important; flex-shrink: 0; }
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: #fff; font-family: 'Georgia', serif; font-size: 11pt; color: #000; }
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    .print-page { padding: 0; margin: 0; }
+    .print-header { display: flex; align-items: center; gap: 14px; padding-bottom: 10px; border-bottom: 3px solid #C8922A; margin-bottom: 14px; }
+    .print-header img { width: 54px; height: 54px; object-fit: contain; }
+    .print-header-text h1 { font-size: 13pt; color: #1B3A2D; margin-bottom: 2px; }
+    .print-header-text p { font-size: 8pt; color: #555; letter-spacing: 0.08em; text-transform: uppercase; }
+    .print-name-bar { background: #1B3A2D; color: #fff; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .print-name-bar h2 { font-size: 12pt; margin: 0; }
+    .print-name-bar span { font-size: 9pt; opacity: 0.8; }
+    .print-badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .print-badge { background: #EFF4F1; border: 1px solid #C8D4CB; padding: 2px 8px; border-radius: 4px; font-size: 8pt; font-family: sans-serif; color: #1B3A2D; }
+    .print-section { margin-bottom: 12px; page-break-inside: avoid; }
+    .print-section-title { font-family: sans-serif; font-size: 7.5pt; letter-spacing: 0.15em; text-transform: uppercase; color: #C8922A; font-weight: 700; border-bottom: 1.5px solid #C8922A; padding-bottom: 3px; margin-bottom: 6px; }
+    .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+    .print-row { display: flex; padding: 3px 0; border-bottom: 1px solid #e5e5e5; font-size: 9.5pt; }
+    .print-key { width: 160px; flex-shrink: 0; color: #666; font-size: 8.5pt; }
+    .print-val { color: #111; font-weight: 600; }
+    .print-footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #ccc; font-family: sans-serif; font-size: 7.5pt; color: #888; display: flex; justify-content: space-between; }
+    .overlay, .modal, .header, .nav-bar { display: none !important; }
+  }
+  .print-only { display: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .header-title { font-size: 0.8rem; }
+    .header-sub { display: none; }
+    .header-logo img { width: 38px; height: 38px; }
+    .header-inner { min-height: 56px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .qual-row { grid-template-columns: 1fr 1fr; }
+    .qual-row .qual-name { grid-column: 1 / -1; }
+    .rev-key { width: 130px; font-size: 0.72rem; }
+    .rev-val { font-size: 0.77rem; }
+    .container, .container-wide { padding: 0.9rem 0.75rem; }
+    .card { padding: 1rem 0.9rem; }
+    .steps { gap: 2px; }
+    .step-item { min-width: 56px; font-size: 0.6rem; padding: 6px 2px; gap: 2px; }
+    .btn, .btn-accent { padding: 10px 14px; font-size: 0.83rem; }
+    .btn-outline { padding: 8px 10px; font-size: 0.78rem; }
+    .stat-val { font-size: 1.3rem; }
+    .grid-stat { grid-template-columns: 1fr 1fr; }
+    .nav-user .hide-sm { display: none; }
+    .modal { padding: 1rem 0.9rem; border-radius: 10px 10px 0 0; margin: auto 0 0 0; max-height: 92vh; overflow-y: auto; }
+    .overlay { padding: 0; align-items: flex-end; }
+    .modal-header { flex-wrap: wrap; }
+    .filter-bar { gap: 6px; }
+    .filter-bar .search-wrap { min-width: 100%; order: -1; }
+    .tbl-hide-mobile { display: none; }
+    .show-tbl { display: none; }
+    .show-cards { display: block; }
+    .nav-bar { padding: 0.5rem 0.75rem; }
+    .btn-ghost { padding: 6px 10px; font-size: 0.72rem; }
+    .confirm-modal { border-radius: 12px 12px 0 0; margin: auto 0 0 0; }
+  }
+  @media (min-width: 681px) {
+    .show-cards { display: none; }
+    .show-tbl { display: block; }
+  }
+  @media (max-width: 380px) {
+    .header-title { font-size: 0.72rem; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-stat { grid-template-columns: 1fr 1fr; }
+    .step-item { min-width: 48px; font-size: 0.56rem; }
+  }
+`;
+
+const emptyForm = () => ({
+  fullName:"", gender:"", nationalId:"", dobDay:"", dobMonth:"", dobYear:"",
+  jobGroup:"", disability:"", disabilityNature:"",
+  appointmentDay:"", appointmentMonth:"", appointmentYear:"",
+  retirementDay:"", retirementMonth:"", retirementYear:"",
+  designation:"", department:"", dutiesRoles:"", responsibilities:"",
+  kcseYear:"", kcseGrade:"",
+  certName:"", certYear:"", certGrade:"",
+  diplomaName:"", diplomaYear:"", diplomaGrade:"",
+  hdipName:"", hdipYear:"", hdipGrade:"",
+  degreeName:"", degreeYear:"", degreeGrade:"",
+  mastersName:"", mastersYear:"", mastersGrade:"",
+  phdName:"", phdYear:"", phdGrade:"",
+  pedagogyYear:"", pedagogyGrade:"",
+  totYear:"", totGrade:"",
+  supervYear:"", supervGrade:"",
+  sldpYear:"", sldpGrade:"",
+  retireCourseYear:"", retireCourseGrade:"",
+  tvetaDate:"", tvetaExpiry:"", tvetaRegNo:"",
+});
+
+const StepIcon = ({ index, done }) => {
+  const icons = [<FaUser/>, <FaBriefcase/>, <FaBook/>, <FaChalkboardTeacher/>, <FaClipboardList/>];
+  if (done) return <FaRegCheckCircle/>;
+  return icons[index] || null;
+};
+
+function DateFields({ prefix, label, form, onChange, required, icon }) {
+  const s = (k, v) => onChange(prefix + k, v);
+  return (
+    <div className="field">
+      <label className="label">{icon}{label}{required && " *"}</label>
+      <div className="date-row">
+        <input className="date-dd" placeholder="DD" type="number" min={1} max={31} inputMode="numeric"
+          value={form[prefix+"Day"]} onChange={e=>s("Day",e.target.value)} />
+        <select className="date-mm" value={form[prefix+"Month"]} onChange={e=>s("Month",e.target.value)}>
+          <option value="">Month</option>
+          {MONTHS.map(m=><option key={m}>{m}</option>)}
+        </select>
+        <input className="date-yy" placeholder="YYYY" type="number" inputMode="numeric"
+          value={form[prefix+"Year"]} onChange={e=>s("Year",e.target.value)} />
+      </div>
+    </div>
+  );
+}
+
+// ── PUBLIC FORM ───────────────────────────────────────────────────────────────
+function DataForm() {
+  const [step, setStep]           = useState(0);
+  const [form, setForm]           = useState(emptyForm());
+  const [errors, setErrors]       = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [saveErr, setSaveErr]     = useState("");
+
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  const inp = k => ({ value: form[k], onChange: e => set(k, e.target.value) });
+  const isPartTime = ["Part Time Lecturer","Intern","Teaching Practice"].includes(form.designation);
+
+  const validate = () => {
+    const e = {};
+    if (step===0) {
+      if (!form.fullName.trim())   e.fullName = "Required";
+      if (!form.gender)            e.gender   = "Required";
+      if (!form.nationalId.trim()) e.nationalId = "Required";
+    }
+    if (step===1) {
+      if (!form.designation) e.designation = "Required";
+      if (!form.department)  e.department  = "Required";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const next = () => { if (validate()) setStep(s=>Math.min(s+1,4)); window.scrollTo(0,0); };
+  const back = () => { setStep(s=>Math.max(s-1,0)); window.scrollTo(0,0); };
+
+  const submit = async () => {
+    setSaving(true); setSaveErr("");
+    const dbRecord = {
+      full_name: form.fullName, gender: form.gender, national_id: form.nationalId,
+      dob_day: form.dobDay, dob_month: form.dobMonth, dob_year: form.dobYear,
+      job_group: form.jobGroup, disability: form.disability, disability_nature: form.disabilityNature,
+      appointment_day: form.appointmentDay, appointment_month: form.appointmentMonth, appointment_year: form.appointmentYear,
+      retirement_day: form.retirementDay, retirement_month: form.retirementMonth, retirement_year: form.retirementYear,
+      designation: form.designation, department: form.department,
+      duties_roles: form.dutiesRoles, responsibilities: form.responsibilities,
+      kcse_year: form.kcseYear, kcse_grade: form.kcseGrade,
+      cert_name: form.certName, cert_year: form.certYear, cert_grade: form.certGrade,
+      diploma_name: form.diplomaName, diploma_year: form.diplomaYear, diploma_grade: form.diplomaGrade,
+      hdip_name: form.hdipName, hdip_year: form.hdipYear, hdip_grade: form.hdipGrade,
+      degree_name: form.degreeName, degree_year: form.degreeYear, degree_grade: form.degreeGrade,
+      masters_name: form.mastersName, masters_year: form.mastersYear, masters_grade: form.mastersGrade,
+      phd_name: form.phdName, phd_year: form.phdYear, phd_grade: form.phdGrade,
+      pedagogy_year: form.pedagogyYear, pedagogy_grade: form.pedagogyGrade,
+      tot_year: form.totYear, tot_grade: form.totGrade,
+      superv_year: form.supervYear, superv_grade: form.supervGrade,
+      sldp_year: form.sldpYear, sldp_grade: form.sldpGrade,
+      retire_course_year: form.retireCourseYear, retire_course_grade: form.retireCourseGrade,
+      tveta_date: form.tvetaDate || null, tveta_expiry: form.tvetaExpiry || null, tveta_reg_no: form.tvetaRegNo,
+      submitted_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from("staff_submissions").insert([dbRecord]);
+    setSaving(false);
+    if (error) { setSaveErr(error.message); return; }
+    setSubmitted(true);
+  };
+
+  if (submitted) return (
+    <div className="container">
+      <div className="card" style={{textAlign:"center",padding:"3rem 1.5rem"}}>
+        <div style={{width:68,height:68,borderRadius:"50%",background:"#d1fae5",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 1.25rem",fontSize:"2rem",color:C.success}}>
+          <FaRegCheckCircle/>
+        </div>
+        <h2 style={{fontFamily:"sans-serif",color:C.success,marginBottom:8}}>Submission Received</h2>
+        <p style={{fontFamily:"sans-serif",color:C.muted,marginBottom:"1.75rem"}}>
+          Thank you, <strong>{form.fullName}</strong>. Your data has been recorded successfully.
+        </p>
+        <button className="btn" onClick={()=>{setForm(emptyForm());setStep(0);setSubmitted(false);}}>
+          <FaUser/> Submit Another Response
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="container">
+      <div className="card">
+        <div className="page-header">
+          <h2><FaClipboardList style={{color:C.accent}}/> Staff Data Collection Form</h2>
+          <p>National Youth Service Engineering Institute — Please complete all applicable fields accurately.</p>
+        </div>
+
+        <div className="steps">
+          {STEPS.map((s,i)=>(
+            <div key={i} className={"step-item "+(i===step?"step-active":i<step?"step-done":"step-idle")}>
+              <StepIcon index={i} done={i<step}/>{s}
+            </div>
+          ))}
+        </div>
+
+        {step===0 && <>
+          <div className="sec-title"><FaUser/> Personal Information</div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label"><FaUser size={11}/> Full Name *</label>
+              <input {...inp("fullName")} placeholder="Enter full name" style={{borderColor:errors.fullName?C.danger:undefined}} />
+              {errors.fullName && <span style={{color:C.danger,fontSize:"0.7rem",fontFamily:"sans-serif",display:"flex",alignItems:"center",gap:4}}><FaExclamationTriangle size={10}/>{errors.fullName}</span>}
+            </div>
+            <div className="field">
+              <label className="label"><FaUser size={11}/> Gender *</label>
+              <select {...inp("gender")} style={{borderColor:errors.gender?C.danger:undefined}}>
+                <option value="">Select…</option><option>Male</option><option>Female</option>
+              </select>
+              {errors.gender && <span style={{color:C.danger,fontSize:"0.7rem",fontFamily:"sans-serif",display:"flex",alignItems:"center",gap:4}}><FaExclamationTriangle size={10}/>{errors.gender}</span>}
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label"><FaIdCard size={11}/> National ID No. *</label>
+              <input {...inp("nationalId")} placeholder="Enter ID number" inputMode="numeric" style={{borderColor:errors.nationalId?C.danger:undefined}}/>
+              {errors.nationalId && <span style={{color:C.danger,fontSize:"0.7rem",fontFamily:"sans-serif",display:"flex",alignItems:"center",gap:4}}><FaExclamationTriangle size={10}/>{errors.nationalId}</span>}
+            </div>
+            <DateFields prefix="dob" label="Date of Birth" icon={<FaCalendarAlt size={11}/>} form={form} onChange={set} required/>
+          </div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label"><FaInfoCircle size={11}/> Disability</label>
+              <select {...inp("disability")}>
+                <option value="">Select…</option><option>No</option><option>Yes</option>
+              </select>
+            </div>
+            {form.disability==="Yes" && <div className="field">
+              <label className="label"><FaInfoCircle size={11}/> Nature of Disability</label>
+              <input {...inp("disabilityNature")} placeholder="Describe disability…"/>
+            </div>}
+          </div>
+        </>}
+
+        {step===1 && <>
+          <div className="sec-title"><FaBriefcase/> Employment Details</div>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label"><FaUserTie size={11}/> Designation *</label>
+              <select {...inp("designation")} style={{borderColor:errors.designation?C.danger:undefined}}>
+                <option value="">Select…</option>
+                {DESIGNATIONS.map(d=><option key={d}>{d}</option>)}
+              </select>
+              {errors.designation && <span style={{color:C.danger,fontSize:"0.7rem",fontFamily:"sans-serif",display:"flex",alignItems:"center",gap:4}}><FaExclamationTriangle size={10}/>{errors.designation}</span>}
+            </div>
+            <div className="field">
+              <label className="label"><FaBuilding size={11}/> Department *</label>
+              <select {...inp("department")} style={{borderColor:errors.department?C.danger:undefined}}>
+                <option value="">Select…</option>
+                {DEPARTMENTS.map(d=><option key={d}>{d}</option>)}
+              </select>
+              {errors.department && <span style={{color:C.danger,fontSize:"0.7rem",fontFamily:"sans-serif",display:"flex",alignItems:"center",gap:4}}><FaExclamationTriangle size={10}/>{errors.department}</span>}
+            </div>
+          </div>
+          <div className="grid-2">
+            {!isPartTime && <div className="field">
+              <label className="label"><FaBriefcase size={11}/> Job Group</label>
+              <select {...inp("jobGroup")}>
+                <option value="">Select…</option>
+                {JOB_GROUPS.map(g=><option key={g}>Group {g}</option>)}
+              </select>
+            </div>}
+            <DateFields prefix="appointment" label="Date of Appointment" icon={<FaCalendarAlt size={11}/>} form={form} onChange={set}/>
+          </div>
+          <div className="grid-2">
+            <DateFields prefix="retirement" label={isPartTime?"Contract Expiry":"Date of Retirement"} icon={<FaCalendarAlt size={11}/>} form={form} onChange={set}/>
+          </div>
+          <div className="field" style={{marginBottom:"1rem"}}>
+            <label className="label"><FaClipboardList size={11}/> Duties & Roles</label>
+            <input {...inp("dutiesRoles")} placeholder="e.g. HOD, Deputy HOD, Internal Verifier"/>
+          </div>
+          <div className="field">
+            <label className="label"><FaClipboardList size={11}/> Responsibilities</label>
+            <textarea {...inp("responsibilities")} placeholder="Describe your key responsibilities…"/>
+          </div>
+        </>}
+
+        {step===2 && <>
+          <div className="sec-title"><FaGraduationCap/> Academic Qualifications</div>
+          <p style={{fontFamily:"sans-serif",fontSize:"0.76rem",color:C.muted,marginBottom:"1rem"}}>Fill only qualifications you hold.</p>
+          {[
+            {label:"KCSE",         prefix:"kcse",    noName:true, icon:<FaBook size={13}/>},
+            {label:"Certificate",  prefix:"cert",                 icon:<FaCertificate size={13}/>},
+            {label:"Diploma",      prefix:"diploma",              icon:<FaCertificate size={13}/>},
+            {label:"Higher Diploma",prefix:"hdip",                icon:<FaCertificate size={13}/>},
+            {label:"Degree",       prefix:"degree",               icon:<FaGraduationCap size={13}/>},
+            {label:"Masters",      prefix:"masters",              icon:<FaGraduationCap size={13}/>},
+            {label:"PhD",          prefix:"phd",                  icon:<FaGraduationCap size={13}/>},
+          ].map(({label,prefix,noName,icon})=>(
+            <div key={prefix} style={{borderBottom:`1px solid ${C.border}`,paddingBottom:"0.75rem",marginBottom:"0.75rem"}}>
+              <div className="qual-label">{icon}{label}</div>
+              <div className="qual-row">
+                {!noName && <div className="field qual-name">
+                  <label className="label">Name / Institution</label>
+                  <input value={form[prefix+"Name"]} onChange={e=>set(prefix+"Name",e.target.value)} placeholder="Institution name…"/>
+                </div>}
+                <div className="field">
+                  <label className="label">Year</label>
+                  <input type="number" placeholder="YYYY" inputMode="numeric" value={form[prefix+"Year"]} onChange={e=>set(prefix+"Year",e.target.value)}/>
+                </div>
+                <div className="field">
+                  <label className="label">Grade</label>
+                  <input value={form[prefix+"Grade"]} onChange={e=>set(prefix+"Grade",e.target.value)} placeholder="e.g. B+"/>
+                </div>
+              </div>
+            </div>
+          ))}
+        </>}
+
+        {step===3 && <>
+          <div className="sec-title"><FaChalkboardTeacher/> Professional Development</div>
+          <p style={{fontFamily:"sans-serif",fontSize:"0.76rem",color:C.muted,marginBottom:"1rem"}}>Complete only trainings/courses you have undertaken.</p>
+          {[
+            {label:"Pedagogy",               yk:"pedagogyYear",     gk:"pedagogyGrade"},
+            {label:"Training of Trainers (ToT)", yk:"totYear",      gk:"totGrade"},
+            {label:"Supervisory Course",     yk:"supervYear",       gk:"supervGrade"},
+            {label:"SLDP",                   yk:"sldpYear",         gk:"sldpGrade"},
+            {label:"Retirement Course",      yk:"retireCourseYear", gk:"retireCourseGrade"},
+          ].map(({label,yk,gk})=>(
+            <div key={yk} style={{borderBottom:`1px solid ${C.border}`,paddingBottom:"0.75rem",marginBottom:"0.75rem"}}>
+              <div className="qual-label"><FaChalkboardTeacher size={13}/>{label}</div>
+              <div className="grid-2" style={{marginBottom:0}}>
+                <div className="field">
+                  <label className="label"><FaCalendarAlt size={11}/> Year</label>
+                  <input type="number" placeholder="YYYY" inputMode="numeric" value={form[yk]} onChange={e=>set(yk,e.target.value)}/>
+                </div>
+                <div className="field">
+                  <label className="label"><FaRegFileAlt size={11}/> Grade / Score</label>
+                  <input value={form[gk]} onChange={e=>set(gk,e.target.value)} placeholder="e.g. Pass / 78%"/>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="sec-title" style={{marginTop:"1.5rem"}}><FaCertificate/> TVETA Registration</div>
+          <div className="grid-3">
+            <div className="field">
+              <label className="label"><FaCalendarAlt size={11}/> Date Registered</label>
+              <input type="date" {...inp("tvetaDate")}/>
+            </div>
+            <div className="field">
+              <label className="label"><FaCalendarAlt size={11}/> Expiry Date</label>
+              <input type="date" {...inp("tvetaExpiry")}/>
+            </div>
+            <div className="field">
+              <label className="label"><FaIdCard size={11}/> Registration No.</label>
+              <input {...inp("tvetaRegNo")} placeholder="e.g. TVETA/2023/…"/>
+            </div>
+          </div>
+        </>}
+
+        {step===4 && <>
+          <div className="sec-title"><FaEye/> Review Your Submission</div>
+          <div className="alert-success">
+            <FaInfoCircle style={{flexShrink:0,marginTop:2}}/>
+            <span>Please confirm your details. Once submitted your data will be recorded centrally.</span>
+          </div>
+          {saveErr && <div className="alert-danger"><FaExclamationTriangle style={{flexShrink:0,marginTop:2}}/><span>{saveErr}</span></div>}
+          {[
+            [<FaUser/>,"Full Name",form.fullName],[<FaUser/>,"Gender",form.gender],
+            [<FaIdCard/>,"National ID",form.nationalId],
+            [<FaCalendarAlt/>,"Date of Birth",[form.dobDay,form.dobMonth,form.dobYear].filter(Boolean).join(" ")],
+            [<FaUserTie/>,"Designation",form.designation],[<FaBuilding/>,"Department",form.department],
+            [<FaBriefcase/>,"Job Group",form.jobGroup||"N/A"],
+            [<FaInfoCircle/>,"Disability",form.disability||"Not stated"],
+            [<FaCalendarAlt/>,"Appointment",[form.appointmentDay,form.appointmentMonth,form.appointmentYear].filter(Boolean).join(" ")],
+            [<FaCalendarAlt/>,"Retirement/Expiry",[form.retirementDay,form.retirementMonth,form.retirementYear].filter(Boolean).join(" ")],
+            [<FaClipboardList/>,"Duties/Roles",form.dutiesRoles||"—"],
+            [<FaGraduationCap/>,"Degree",form.degreeName?`${form.degreeName} (${form.degreeYear})`:"—"],
+            [<FaGraduationCap/>,"Masters",form.mastersName?`${form.mastersName} (${form.mastersYear})`:"—"],
+            [<FaCertificate/>,"TVETA Reg No.",form.tvetaRegNo||"—"],
+          ].map(([icon,k,v])=>(
+            <div className="rev-row" key={k}>
+              <span className="rev-key">{icon}{k}</span>
+              <span className="rev-val">{v||"—"}</span>
+            </div>
+          ))}
+        </>}
+
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:"1.75rem",gap:8,flexWrap:"wrap"}}>
+          {step>0 ? <button className="btn-outline" onClick={back}><FaArrowLeft/> Back</button> : <span/>}
+          {step<4
+            ? <button className="btn" onClick={next}>Continue <FaArrowRight/></button>
+            : <button className="btn-accent" onClick={submit} disabled={saving} style={{opacity:saving?0.8:1}}>
+                {saving?<FaSpinner className="spin"/>:<FaSave/>}
+                {saving?"Submitting…":"Submit Form"}
+              </button>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+function Login({ onLogin }) {
+  const [u,setU]=useState(""); const [p,setP]=useState(""); const [err,setErr]=useState("");
+  const submit = () => {
+    const a = ADMINS[u.toLowerCase().trim()];
+    if (a && a.password===p) onLogin({username:u,...a});
+    else setErr("Invalid username or password.");
+  };
+  return (
+    <div style={{minHeight:"calc(100vh - 60px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem 1rem",background:C.bg}}>
+      <div className="card" style={{maxWidth:380,width:"100%",boxShadow:"0 8px 32px rgba(0,0,0,0.10)"}}>
+        <div style={{textAlign:"center",marginBottom:"1.75rem"}}>
+          <img src={LOGO} alt="NYS Logo" style={{width:64,height:64,objectFit:"contain",marginBottom:12}}/>
+          <h2 style={{fontFamily:"sans-serif",color:C.primary,marginBottom:4,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            <FaUserShield style={{color:C.accent}}/> Admin Login
+          </h2>
+          <p style={{fontFamily:"sans-serif",fontSize:"0.76rem",color:C.muted}}>NYSEI Staff Data Platform</p>
+        </div>
+        {err && <div className="alert-danger"><FaExclamationTriangle style={{flexShrink:0,marginTop:2}}/><span>{err}</span></div>}
+        <div className="field" style={{marginBottom:"1rem"}}>
+          <label className="label"><FaUser size={11}/> Username</label>
+          <input value={u} onChange={e=>{setU(e.target.value);setErr("");}} placeholder="principal or deputy.principal" autoCapitalize="none"/>
+        </div>
+        <div className="field" style={{marginBottom:"1.5rem"}}>
+          <label className="label"><FaLock size={11}/> Password</label>
+          <input type="password" value={p} onChange={e=>{setP(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+        </div>
+        <button className="btn" style={{width:"100%",justifyContent:"center"}} onClick={submit}>
+          <FaLock/> Sign In
+        </button>
+        <p style={{fontFamily:"sans-serif",fontSize:"0.68rem",color:C.muted,textAlign:"center",marginTop:"1rem"}}>
+          username: <code>principal</code> or <code>deputy.principal</code> · password: <code>nysei2024</code>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── STAT CARD ─────────────────────────────────────────────────────────────────
+function StatCard({label,value,icon,color}) {
+  return (
+    <div className="stat-card">
+      <div className="stat-icon" style={{background:color+"22",color}}>{icon}</div>
+      <div><div className="stat-label">{label}</div><div className="stat-val">{value}</div></div>
+    </div>
+  );
+}
+
+function BarChart({data,title,icon}) {
+  const max = Math.max(...Object.values(data),1);
+  return (
+    <div className="card">
+      <div className="sec-title">{icon}{title}</div>
+      {Object.entries(data).sort((a,b)=>b[1]-a[1]).map(([k,v])=>(
+        <div key={k} style={{marginBottom:10,fontFamily:"sans-serif"}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.77rem",marginBottom:3}}>
+            <span style={{color:C.text}}>{k}</span>
+            <span style={{color:C.muted,fontWeight:700,minWidth:18,textAlign:"right"}}>{v}</span>
+          </div>
+          <div className="bar-bg"><div className="bar-fill" style={{width:`${(v/max)*100}%`}}/></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── PRINT RECORD ─────────────────────────────────────────────────────────────
+function PrintRecord({ r }) {
+  const fmtDate = (d,m,y) => [d,m,y].filter(Boolean).join(" ");
+  const row = (k,v) => v ? (
+    <div className="print-row" key={k}>
+      <span className="print-key">{k}</span>
+      <span className="print-val">{v}</span>
+    </div>
+  ) : null;
+
+  return (
+    <div className="print-only print-page" id="print-record">
+      <div className="print-header">
+        <img src={LOGO} alt="NYS"/>
+        <div className="print-header-text">
+          <h1>National Youth Service Engineering Institute</h1>
+          <p>Staff Personal Record — Confidential</p>
+        </div>
+      </div>
+
+      <div className="print-name-bar">
+        <h2>{r.full_name}</h2>
+        <span>Printed: {new Date().toLocaleDateString("en-KE",{day:"2-digit",month:"long",year:"numeric"})}</span>
+      </div>
+
+      <div className="print-badges">
+        {r.designation && <span className="print-badge">{r.designation}</span>}
+        {r.department  && <span className="print-badge">{r.department}</span>}
+        {r.job_group   && <span className="print-badge">Job Group: {r.job_group}</span>}
+        {r.tveta_reg_no && <span className="print-badge">TVETA: {r.tveta_reg_no}</span>}
+      </div>
+
+      <div className="print-section">
+        <div className="print-section-title">Personal Information</div>
+        <div className="print-grid">
+          {row("Full Name",         r.full_name)}
+          {row("Gender",            r.gender)}
+          {row("National ID No.",   r.national_id)}
+          {row("Date of Birth",     fmtDate(r.dob_day,r.dob_month,r.dob_year))}
+          {row("Disability",        r.disability)}
+          {row("Disability Nature", r.disability_nature)}
+        </div>
+      </div>
+
+      <div className="print-section">
+        <div className="print-section-title">Employment Details</div>
+        <div className="print-grid">
+          {row("Designation",       r.designation)}
+          {row("Department",        r.department)}
+          {row("Job Group",         r.job_group)}
+          {row("Date of Appointment", fmtDate(r.appointment_day,r.appointment_month,r.appointment_year))}
+          {row("Retirement / Expiry", fmtDate(r.retirement_day,r.retirement_month,r.retirement_year))}
+        </div>
+        {r.duties_roles && <div className="print-row"><span className="print-key">Duties & Roles</span><span className="print-val">{r.duties_roles}</span></div>}
+        {r.responsibilities && <div className="print-row"><span className="print-key">Responsibilities</span><span className="print-val">{r.responsibilities}</span></div>}
+      </div>
+
+      <div className="print-section">
+        <div className="print-section-title">Academic Qualifications</div>
+        <div className="print-grid">
+          {row("KCSE",         r.kcse_year?`${r.kcse_year} — Grade: ${r.kcse_grade}`:"")}
+          {row("Certificate",  r.cert_name?`${r.cert_name} (${r.cert_year}) — ${r.cert_grade}`:"")}
+          {row("Diploma",      r.diploma_name?`${r.diploma_name} (${r.diploma_year}) — ${r.diploma_grade}`:"")}
+          {row("Higher Diploma",r.hdip_name?`${r.hdip_name} (${r.hdip_year}) — ${r.hdip_grade}`:"")}
+          {row("Degree",       r.degree_name?`${r.degree_name} (${r.degree_year}) — ${r.degree_grade}`:"")}
+          {row("Masters",      r.masters_name?`${r.masters_name} (${r.masters_year}) — ${r.masters_grade}`:"")}
+          {row("PhD",          r.phd_name?`${r.phd_name} (${r.phd_year}) — ${r.phd_grade}`:"")}
+        </div>
+      </div>
+
+      <div className="print-section">
+        <div className="print-section-title">Professional Development</div>
+        <div className="print-grid">
+          {row("Pedagogy",      r.pedagogy_year?`${r.pedagogy_year} — ${r.pedagogy_grade}`:"")}
+          {row("ToT",           r.tot_year?`${r.tot_year} — ${r.tot_grade}`:"")}
+          {row("Supervisory",   r.superv_year?`${r.superv_year} — ${r.superv_grade}`:"")}
+          {row("SLDP",          r.sldp_year?`${r.sldp_year} — ${r.sldp_grade}`:"")}
+          {row("Retirement Course",r.retire_course_year?`${r.retire_course_year} — ${r.retire_course_grade}`:"")}
+        </div>
+      </div>
+
+      {(r.tveta_reg_no||r.tveta_date||r.tveta_expiry) && (
+        <div className="print-section">
+          <div className="print-section-title">TVETA Registration</div>
+          <div className="print-grid">
+            {row("Registration No.", r.tveta_reg_no)}
+            {row("Date Registered",  r.tveta_date)}
+            {row("Expiry Date",      r.tveta_expiry)}
+          </div>
+        </div>
+      )}
+
+      <div className="print-footer">
+        <span>National Youth Service Engineering Institute — Staff Data Platform</span>
+        <span>Record ID: {r.id} | Submitted: {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-KE") : "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function Dashboard({admin,onLogout}) {
+  const [data,setData]               = useState([]);
+  const [loading,setLoading]         = useState(true);
+  const [loadErr,setLoadErr]         = useState("");
+  const [selected,setSelected]       = useState(null);
+  const [view,setView]               = useState("analytics");
+  const [filterDept,setFilterDept]   = useState("");
+  const [filterDesig,setFilterDesig] = useState("");
+  const [search,setSearch]           = useState("");
+  const [deleting,setDeleting]       = useState(null);
+  const [confirmModal,setConfirmModal] = useState(null); // {id, name}
+  const printRef = useRef();
+
+  const load = useCallback(async () => {
+    setLoadErr("");
+    try {
+      const { data: rows, error } = await supabase
+        .from("staff_submissions").select("*").order("submitted_at",{ascending:false});
+      if (error) throw error;
+      setData(rows||[]);
+    } catch(e) {
+      setLoadErr("Could not load data: "+e.message);
+    } finally { setLoading(false); }
+  },[]);
+
+  useEffect(()=>{ load(); },[load]);
+
+  const filtered = data.filter(d=>{
+    const mD = !filterDept  || d.department===filterDept;
+    const mDe= !filterDesig || d.designation===filterDesig;
+    const mS = !search || d.full_name?.toLowerCase().includes(search.toLowerCase())
+                       || d.national_id?.includes(search)
+                       || d.department?.toLowerCase().includes(search.toLowerCase())
+                       || d.designation?.toLowerCase().includes(search.toLowerCase());
+    return mD && mDe && mS;
+  });
+
+  const byDept  = DEPARTMENTS.reduce((a,d)=>{a[d]=data.filter(x=>x.department===d).length;return a;},{});
+  const byDesig = DESIGNATIONS.reduce((a,d)=>{a[d]=data.filter(x=>x.designation===d).length;return a;},{});
+  const byGender= {Male:data.filter(x=>x.gender==="Male").length, Female:data.filter(x=>x.gender==="Female").length};
+
+  // Full CSV export with every field
+  const exportCSV = () => {
+    const header = EXPORT_COLUMNS.map(([lbl])=>`"${lbl}"`).join(",");
+    const rows = data.map(d=>
+      EXPORT_COLUMNS.map(([,key])=>`"${(d[key]||"").toString().replace(/"/g,'""')}"`).join(",")
+    );
+    const blob = new Blob([[header,...rows].join("\n")],{type:"text/csv;charset=utf-8;"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="NYSEI_Staff_Data.csv"; a.click();
+  };
+
+  // Delete
+  const openConfirmModal = (id,name) => setConfirmModal({id,name});
+  const handleDelete = async () => {
+    if (!confirmModal) return;
+    setDeleting(confirmModal.id);
+    setConfirmModal(null);
+    const {error} = await supabase.from("staff_submissions").delete().eq("id",confirmModal.id);
+    if (!error) {
+      setData(prev=>prev.filter(r=>r.id!==confirmModal.id));
+      if (selected?.id===confirmModal.id) setSelected(null);
+    } else { alert("Delete failed: "+error.message); }
+    setDeleting(null);
+  };
+
+  // Print individual record
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const navBtn = (id,lbl,icon) => (
+    <button key={id} className="btn-outline"
+      style={{background:view===id?C.primary:"transparent",color:view===id?"#fff":C.primary,
+              borderColor:view===id?C.primary:C.border,padding:"7px 14px",fontSize:"0.78rem"}}
+      onClick={()=>setView(id)}>{icon}{lbl}</button>
+  );
+
+  const fmtDate = (d,m,y) => [d,m,y].filter(Boolean).join(" ");
+
+  return (
+    <div style={{background:C.bg,minHeight:"100vh"}}>
+      {/* Print area — hidden on screen, shown when printing */}
+      {selected && <PrintRecord r={selected}/>}
+
+      {/* Sub-nav */}
+      <div className="nav-bar no-print">
+        <div className="nav-tabs">
+          {navBtn("analytics","Analytics",<FaChartBar/>)}
+          {navBtn("records","Records",<FaTable/>)}
+        </div>
+        <div className="nav-user">
+          <button className="btn-outline" style={{padding:"6px 10px",fontSize:"0.75rem"}} onClick={load}>
+            <FaDatabase/><span className="hide-sm"> Refresh</span>
+          </button>
+          <button className="btn-outline" style={{padding:"6px 10px",fontSize:"0.75rem"}} onClick={exportCSV} disabled={!data.length}>
+            <FaFileExport/><span className="hide-sm"> Export CSV</span>
+          </button>
+          <span className="hide-sm" style={{color:C.muted,fontFamily:"sans-serif",fontSize:"0.8rem"}}>
+            <FaUserShield style={{color:C.accent,marginRight:4}}/><strong>{admin.name}</strong>
+          </span>
+          <button className="btn-outline" style={{padding:"6px 10px",fontSize:"0.75rem",color:C.danger,borderColor:C.danger}} onClick={onLogout}>
+            <FaSignOutAlt/><span className="hide-sm"> Sign Out</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="container-wide no-print">
+        {loadErr && <div className="alert-danger" style={{marginTop:"0.75rem"}}>
+          <FaExclamationTriangle style={{flexShrink:0}}/><span>{loadErr}
+            <button style={{background:"none",border:"none",cursor:"pointer",textDecoration:"underline",color:C.danger,fontFamily:"sans-serif",fontSize:"0.8rem",marginLeft:8}} onClick={load}>Retry</button>
+          </span>
+        </div>}
+
+        {/* ── ANALYTICS ── */}
+        {view==="analytics" && <>
+          <div className="page-header" style={{marginTop:"0.5rem"}}>
+            <h2><FaChartBar style={{color:C.accent}}/> Staff Analytics</h2>
+            <p>{data.length} total record{data.length!==1?"s":""}</p>
+          </div>
+          {loading
+            ? <div style={{fontFamily:"sans-serif",color:C.muted,padding:"2rem 0",display:"flex",alignItems:"center",gap:8}}><FaSpinner className="spin"/>Loading data…</div>
+            : <>
+              <div className="grid-stat">
+                <StatCard label="Total Staff"      value={data.length}                                    icon={<FaUsers/>}         color="#1B3A2D"/>
+                <StatCard label="Male"             value={byGender.Male}                                  icon={<FaMale/>}          color="#2563EB"/>
+                <StatCard label="Female"           value={byGender.Female}                                icon={<FaFemale/>}        color="#DB2777"/>
+                <StatCard label="With Disability"  value={data.filter(x=>x.disability==="Yes").length}   icon={<FaWheelchair/>}    color="#7C3AED"/>
+                <StatCard label="Degree Holders"   value={data.filter(x=>x.degree_year).length}          icon={<FaGraduationCap/>} color="#C8922A"/>
+                <StatCard label="TVETA Registered" value={data.filter(x=>x.tveta_reg_no?.trim()).length} icon={<FaCertificate/>}   color="#1B5E36"/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(290px,1fr))",gap:"1rem"}}>
+                <BarChart data={byDept}  title="Staff by Department"  icon={<FaBuilding/>}/>
+                <BarChart data={byDesig} title="Staff by Designation" icon={<FaUserTie/>}/>
+              </div>
+            </>
+          }
+        </>}
+
+        {/* ── RECORDS ── */}
+        {view==="records" && <>
+          <div className="page-header" style={{marginTop:"0.5rem"}}>
+            <h2><FaTable style={{color:C.accent}}/> Staff Records</h2>
+            <p>Showing {filtered.length} of {data.length} record{data.length!==1?"s":""}</p>
+          </div>
+
+          <div className="filter-bar">
+            <div className="search-wrap">
+              <FaSearch className="search-icon"/>
+              <input placeholder="Search name, ID, department…" value={search} onChange={e=>setSearch(e.target.value)} style={{paddingLeft:32}}/>
+            </div>
+            <select style={{border:`1px solid ${C.border}`,borderRadius:6,padding:"9px 28px 9px 10px",fontSize:"0.8rem",fontFamily:"sans-serif",minWidth:148,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A7060' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 8px center",WebkitAppearance:"none"}}
+              value={filterDept} onChange={e=>setFilterDept(e.target.value)}>
+              <option value="">All Departments</option>
+              {DEPARTMENTS.map(d=><option key={d}>{d}</option>)}
+            </select>
+            <select style={{border:`1px solid ${C.border}`,borderRadius:6,padding:"9px 28px 9px 10px",fontSize:"0.8rem",fontFamily:"sans-serif",minWidth:148,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A7060' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 8px center",WebkitAppearance:"none"}}
+              value={filterDesig} onChange={e=>setFilterDesig(e.target.value)}>
+              <option value="">All Designations</option>
+              {DESIGNATIONS.map(d=><option key={d}>{d}</option>)}
+            </select>
+            {(search||filterDept||filterDesig) &&
+              <button className="btn-outline" style={{color:C.danger,borderColor:C.danger,padding:"8px 10px"}}
+                onClick={()=>{setSearch("");setFilterDept("");setFilterDesig("");}}>
+                <FaTimes/> Clear
+              </button>
+            }
+          </div>
+
+          {/* Desktop table */}
+          <div className="card show-tbl" style={{padding:0,overflow:"hidden"}}>
+            {loading
+              ? <p style={{fontFamily:"sans-serif",color:C.muted,textAlign:"center",padding:"2.5rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaSpinner className="spin"/>Loading…</p>
+              : filtered.length===0
+                ? <p style={{fontFamily:"sans-serif",color:C.muted,textAlign:"center",padding:"2.5rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaUsers/>No records found.</p>
+                : <div style={{overflowX:"auto"}}>
+                  <table className="tbl">
+                    <thead><tr>
+                      {["#","Name","Gender","Department","Designation","DOB","TVETA","Submitted","Actions"].map(h=><th key={h}>{h}</th>)}
+                    </tr></thead>
+                    <tbody>
+                      {filtered.map((row,idx)=>(
+                        <tr key={row.id}>
+                          <td style={{color:C.muted,fontSize:"0.72rem"}}>{idx+1}</td>
+                          <td style={{fontWeight:600,minWidth:150}}>
+                            <div style={{display:"flex",alignItems:"center",gap:7}}>
+                              <div style={{width:28,height:28,borderRadius:"50%",background:C.light,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:C.primary,fontSize:"0.75rem",fontWeight:700}}>
+                                {row.full_name?.charAt(0)?.toUpperCase()}
+                              </div>
+                              <div>
+                                <div>{row.full_name}</div>
+                                <div style={{fontSize:"0.68rem",color:C.muted,fontWeight:400}}>{row.national_id}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="tbl-hide-mobile">
+                            <span style={{display:"flex",alignItems:"center",gap:4}}>
+                              {row.gender==="Male"?<FaMale style={{color:"#2563EB"}}/>:<FaFemale style={{color:"#DB2777"}}/>}
+                              {row.gender}
+                            </span>
+                          </td>
+                          <td className="tbl-hide-mobile">{row.department}</td>
+                          <td><span className="badge">{row.designation}</span></td>
+                          <td className="tbl-hide-mobile" style={{whiteSpace:"nowrap",color:C.muted,fontSize:"0.76rem"}}>{fmtDate(row.dob_day,row.dob_month,row.dob_year)}</td>
+                          <td className="tbl-hide-mobile">
+                            {row.tveta_reg_no
+                              ? <span className="badge-green"><FaCheck/>{row.tveta_reg_no}</span>
+                              : <span style={{color:C.muted,fontSize:"0.76rem"}}>—</span>
+                            }
+                          </td>
+                          <td className="tbl-hide-mobile" style={{whiteSpace:"nowrap",color:C.muted,fontSize:"0.73rem"}}>
+                            {row.submitted_at ? new Date(row.submitted_at).toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"}) : "—"}
+                          </td>
+                          <td>
+                            <div className="tbl-actions">
+                              <button className="btn-outline" style={{padding:"4px 9px",fontSize:"0.72rem"}} onClick={()=>setSelected(row)}>
+                                <FaEye/> View
+                              </button>
+                              <button className="btn-danger" style={{padding:"4px 9px",fontSize:"0.72rem"}} onClick={()=>openConfirmModal(row.id,row.full_name)} disabled={deleting===row.id}>
+                                {deleting===row.id?<FaSpinner className="spin" size={10}/>:<FaTrash size={10}/>} Del
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+            }
+          </div>
+
+          {/* Mobile cards */}
+          <div className="show-cards">
+            {loading
+              ? <div style={{fontFamily:"sans-serif",color:C.muted,padding:"2rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaSpinner className="spin"/>Loading…</div>
+              : filtered.length===0
+                ? <div style={{fontFamily:"sans-serif",color:C.muted,padding:"2rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><FaUsers/>No records found.</div>
+                : filtered.map((row,idx)=>(
+                  <div className="rec-card" key={row.id}>
+                    <div className="rec-card-header">
+                      <div className="rec-avatar">{row.full_name?.charAt(0)?.toUpperCase()}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontFamily:"sans-serif",fontWeight:700,fontSize:"0.9rem",color:C.primary,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{row.full_name}</div>
+                        <div style={{fontFamily:"sans-serif",fontSize:"0.72rem",color:C.muted}}>{row.national_id}</div>
+                      </div>
+                      <span style={{fontFamily:"sans-serif",fontSize:"0.68rem",color:C.muted,flexShrink:0}}>#{idx+1}</span>
+                    </div>
+                    <div className="rec-card-body">
+                      <div><div className="rec-field-lbl">Gender</div><div className="rec-field-val" style={{display:"flex",alignItems:"center",gap:3}}>{row.gender==="Male"?<FaMale style={{color:"#2563EB"}}/>:<FaFemale style={{color:"#DB2777"}}/>}{row.gender}</div></div>
+                      <div><div className="rec-field-lbl">Department</div><div className="rec-field-val">{row.department}</div></div>
+                      <div><div className="rec-field-lbl">Designation</div><div className="rec-field-val"><span className="badge">{row.designation}</span></div></div>
+                      <div><div className="rec-field-lbl">DOB</div><div className="rec-field-val">{fmtDate(row.dob_day,row.dob_month,row.dob_year)||"—"}</div></div>
+                      <div><div className="rec-field-lbl">TVETA</div><div className="rec-field-val">{row.tveta_reg_no?<span className="badge-green"><FaCheck/>{row.tveta_reg_no}</span>:"—"}</div></div>
+                      <div><div className="rec-field-lbl">Submitted</div><div className="rec-field-val">{row.submitted_at?new Date(row.submitted_at).toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"}):"—"}</div></div>
+                    </div>
+                    <div className="rec-card-footer">
+                      <button className="btn-outline" style={{padding:"6px 12px",fontSize:"0.78rem"}} onClick={()=>setSelected(row)}><FaEye/> View</button>
+                      <button className="btn-danger"  style={{padding:"6px 12px",fontSize:"0.78rem"}} onClick={()=>openConfirmModal(row.id,row.full_name)} disabled={deleting===row.id}>
+                        {deleting===row.id?<FaSpinner className="spin"/>:<FaTrash/>} Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+            }
+          </div>
+        </>}
+      </div>
+
+      {/* ── DETAIL MODAL ── */}
+      {selected && (
+        <div className="overlay no-print" onClick={()=>setSelected(null)}>
+          <div className="modal" ref={printRef} onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
+                <div style={{width:42,height:42,borderRadius:"50%",background:C.light,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1rem",fontWeight:700,color:C.primary,flexShrink:0}}>
+                  {selected.full_name?.charAt(0)?.toUpperCase()}
+                </div>
+                <div style={{minWidth:0}}>
+                  <h2 style={{fontFamily:"sans-serif",color:C.primary,fontSize:"1rem",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{selected.full_name}</h2>
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                    <span className="badge">{selected.designation}</span>
+                    <span className="badge">{selected.department}</span>
+                    {selected.tveta_reg_no && <span className="badge-green"><FaCertificate/>{selected.tveta_reg_no}</span>}
+                  </div>
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button className="btn-icon" onClick={handlePrint} title="Print this record"><FaPrint size={16}/></button>
+                <button className="btn-icon btn-icon-danger" onClick={()=>openConfirmModal(selected.id,selected.full_name)} disabled={deleting===selected.id} title="Delete record">
+                  {deleting===selected.id?<FaSpinner className="spin" size={14}/>:<FaTrash size={14}/>}
+                </button>
+                <button className="btn-icon" onClick={()=>setSelected(null)} title="Close"><FaTimes size={16}/></button>
+              </div>
+            </div>
+
+            {[
+              {sec:"Personal Information", icon:<FaUser/>, fields:[
+                [<FaUser/>,"Full Name",         selected.full_name],
+                [<FaUser/>,"Gender",            selected.gender],
+                [<FaIdCard/>,"National ID",     selected.national_id],
+                [<FaCalendarAlt/>,"Date of Birth", fmtDate(selected.dob_day,selected.dob_month,selected.dob_year)],
+                [<FaInfoCircle/>,"Disability",  selected.disability],
+                [<FaInfoCircle/>,"Disability Nature",selected.disability_nature],
+              ]},
+              {sec:"Employment Details", icon:<FaBriefcase/>, fields:[
+                [<FaUserTie/>,"Designation",    selected.designation],
+                [<FaBuilding/>,"Department",    selected.department],
+                [<FaBriefcase/>,"Job Group",    selected.job_group],
+                [<FaCalendarAlt/>,"Date of Appointment", fmtDate(selected.appointment_day,selected.appointment_month,selected.appointment_year)],
+                [<FaCalendarAlt/>,"Retirement/Expiry",   fmtDate(selected.retirement_day,selected.retirement_month,selected.retirement_year)],
+                [<FaClipboardList/>,"Duties & Roles",selected.duties_roles],
+                [<FaClipboardList/>,"Responsibilities",  selected.responsibilities],
+              ]},
+              {sec:"Academic Qualifications", icon:<FaGraduationCap/>, fields:[
+                [<FaBook/>,"KCSE",              selected.kcse_year?`${selected.kcse_year} — ${selected.kcse_grade}`:""],
+                [<FaCertificate/>,"Certificate",selected.cert_name?`${selected.cert_name} (${selected.cert_year}) — ${selected.cert_grade}`:""],
+                [<FaCertificate/>,"Diploma",    selected.diploma_name?`${selected.diploma_name} (${selected.diploma_year}) — ${selected.diploma_grade}`:""],
+                [<FaCertificate/>,"Higher Diploma",selected.hdip_name?`${selected.hdip_name} (${selected.hdip_year}) — ${selected.hdip_grade}`:""],
+                [<FaGraduationCap/>,"Degree",   selected.degree_name?`${selected.degree_name} (${selected.degree_year}) — ${selected.degree_grade}`:""],
+                [<FaGraduationCap/>,"Masters",  selected.masters_name?`${selected.masters_name} (${selected.masters_year}) — ${selected.masters_grade}`:""],
+                [<FaGraduationCap/>,"PhD",      selected.phd_name?`${selected.phd_name} (${selected.phd_year}) — ${selected.phd_grade}`:""],
+              ]},
+              {sec:"Professional Development", icon:<FaChalkboardTeacher/>, fields:[
+                [<FaChalkboardTeacher/>,"Pedagogy",   selected.pedagogy_year?`${selected.pedagogy_year} — ${selected.pedagogy_grade}`:""],
+                [<FaChalkboardTeacher/>,"ToT",        selected.tot_year?`${selected.tot_year} — ${selected.tot_grade}`:""],
+                [<FaChalkboardTeacher/>,"Supervisory",selected.superv_year?`${selected.superv_year} — ${selected.superv_grade}`:""],
+                [<FaChalkboardTeacher/>,"SLDP",       selected.sldp_year?`${selected.sldp_year} — ${selected.sldp_grade}`:""],
+                [<FaChalkboardTeacher/>,"Retirement Course",selected.retire_course_year?`${selected.retire_course_year} — ${selected.retire_course_grade}`:""],
+                [<FaCertificate/>,"TVETA Reg No.",    selected.tveta_reg_no],
+                [<FaCalendarAlt/>,"TVETA Registered", selected.tveta_date],
+                [<FaCalendarAlt/>,"TVETA Expiry",     selected.tveta_expiry],
+              ]},
+            ].map(({sec,icon,fields})=>{
+              const visible=fields.filter(([,,v])=>v);
+              if(!visible.length) return null;
+              return (
+                <div key={sec} style={{marginBottom:"1.1rem"}}>
+                  <div className="sec-title">{icon}{sec}</div>
+                  {visible.map(([ico,k,v])=>(
+                    <div className="rev-row" key={k}>
+                      <span className="rev-key">{ico}{k}</span>
+                      <span className="rev-val">{v}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:"1.1rem",paddingTop:"1rem",borderTop:`1px solid ${C.border}`,flexWrap:"wrap"}}>
+              <button className="btn-outline" onClick={handlePrint}><FaPrint/> Print Record</button>
+              <button className="btn-danger" onClick={()=>openConfirmModal(selected.id,selected.full_name)} disabled={deleting===selected.id}>
+                {deleting===selected.id?<FaSpinner className="spin"/>:<FaTrash/>} Delete Record
+              </button>
+              <button className="btn" onClick={()=>setSelected(null)}><FaTimes/> Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CONFIRM DELETE MODAL ── */}
+      {confirmModal && (
+        <div className="overlay" style={{zIndex:200}} onClick={()=>setConfirmModal(null)}>
+          <div className="confirm-modal" onClick={e=>e.stopPropagation()}>
+            <div style={{width:52,height:52,borderRadius:"50%",background:"#fef2f2",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 1rem",color:C.danger,fontSize:"1.4rem"}}>
+              <FaTrash/>
+            </div>
+            <h3 style={{fontFamily:"sans-serif",color:C.text,marginBottom:8}}>Delete Record?</h3>
+            <p style={{fontFamily:"sans-serif",fontSize:"0.83rem",color:C.muted,marginBottom:"1.5rem",lineHeight:1.5}}>
+              This will permanently delete the record for <strong>{confirmModal.name}</strong>. This action cannot be undone.
+            </p>
+            <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+              <button className="btn-outline" onClick={()=>setConfirmModal(null)}><FaTimes/> Cancel</button>
+              <button className="btn-danger" style={{padding:"10px 20px"}} onClick={handleDelete}><FaTrash/> Yes, Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── ROOT ──────────────────────────────────────────────────────────────────────
+export default function App() {
+  const [screen,setScreen]=useState("form");
+  const [admin,setAdmin]=useState(null);
+  return (
+    <div className="app">
+      <style>{css}</style>
+      <header className="header no-print">
+        <div className="header-inner">
+          <div className="header-logo">
+            <img src={LOGO} alt="NYS Logo"/>
+            <div>
+              <div className="header-title">NYS Engineering Institute</div>
+              <div className="header-sub">Staff Data Collection Platform</div>
+            </div>
+          </div>
+          <div className="header-actions">
+            {screen!=="form"      && <button className="btn-ghost" onClick={()=>setScreen("form")}><FaClipboardList size={12}/> Form</button>}
+            {screen==="form"      && <button className="btn-ghost" onClick={()=>setScreen(admin?"dashboard":"login")}><FaUserShield size={12}/> Admin</button>}
+            {screen==="login"     && <span className="badge-accent"><FaLock size={10}/> Login</span>}
+            {screen==="dashboard" && <span className="badge-accent"><FaUserShield size={10}/> {admin?.role}</span>}
+          </div>
+        </div>
+      </header>
+      {screen==="form"      && <DataForm/>}
+      {screen==="login"     && <Login onLogin={u=>{setAdmin(u);setScreen("dashboard");}}/>}
+      {screen==="dashboard" && admin && <Dashboard admin={admin} onLogout={()=>{setAdmin(null);setScreen("form");}}/>}
+    </div>
+  );
+}

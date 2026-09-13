@@ -12,7 +12,7 @@ import {
   FaSortUp, FaSortDown, FaFilter, FaSearch, FaChartLine, FaChartPie,
   FaRegCalendarAlt, FaClock, FaArrowUp, FaPercent, FaTrash, FaSpinner,
   FaQuestionCircle, FaBan, FaPrint, FaEyeSlash, FaInfoCircle, FaSave,
-  FaDatabase, FaFileExport, FaRegCheckCircle, FaFileDownload, FaEdit, FaKey, FaRedo, FaShieldAlt
+  FaDatabase, FaFileExport, FaRegCheckCircle, FaFileDownload, FaEdit
 } from 'react-icons/fa';
 import { MdAnalytics, MdRecordVoiceOver, MdTimeline } from 'react-icons/md';
 import {
@@ -261,30 +261,25 @@ textarea { min-height: 80px; resize: vertical; }
 /* Responsive Breakpoints */
 @media (max-width: 480px) {
   .header-logo img { width: 32px; height: 32px; }
-  .header-title { font-size: 0.72rem; }
+  .header-title { font-size: 0.7rem; }
   .header-sub { display: none; }
-  .header-inner { min-height: 52px; padding: 0.5rem 0.75rem; flex-wrap: wrap; gap: 6px; }
-  .header-actions { width: 100%; justify-content: flex-end; gap: 4px; flex-wrap: wrap; }
+  .header-inner { min-height: 52px; padding: 0 0.75rem; }
   .btn, .btn-accent { padding: 8px 14px; font-size: 0.8rem; }
   .btn-outline { padding: 6px 12px; font-size: 0.75rem; }
-  .step-item { min-width: 50px; font-size: 0.58rem; padding: 6px 2px; }
+  .step-item { min-width: 55px; font-size: 0.58rem; padding: 6px 2px; }
   .grid-stat { grid-template-columns: 1fr; gap: 10px; }
   .stat-val { font-size: 1.3rem; }
   .stat-icon { font-size: 1.2rem; }
-  .modal { padding: 1rem; max-height: 85vh; border-radius: 16px 16px 0 0; }
-  .rev-row { flex-direction: column; gap: 2px; padding: 8px 0; }
-  .rev-key { width: 100%; font-size: 0.72rem; font-weight: 700; color: ${C.primary}; }
-  .rev-val { font-size: 0.8rem; word-break: break-word; }
-  .container, .container-wide { padding: 0.5rem; }
-  .card { padding: 0.875rem; border-radius: 10px; }
+  .modal { padding: 1rem; }
+  .rev-key { width: 110px; font-size: 0.72rem; }
+  .rev-val { font-size: 0.78rem; }
+  .container, .container-wide { padding: 0.75rem; }
+  .card { padding: 0.875rem; }
   .filter-group { min-width: 100%; }
   .search-wrap { min-width: 100%; }
-  .btn-ghost { padding: 5px 8px; font-size: 0.68rem; gap: 4px; }
+  .btn-ghost { padding: 5px 10px; font-size: 0.7rem; }
   .toast-notification { bottom: 10px; right: 10px; left: 10px; }
   .toast-success, .toast-error { justify-content: center; }
-  .qual-row { grid-template-columns: 1fr !important; gap: 6px; }
-  .qual-row input, .qual-row select { width: 100%; }
-  .alert-modal { padding: 1.25rem 1rem; border-radius: 14px; max-width: 92%; }
 }
 
 @media (max-width: 768px) {
@@ -369,127 +364,6 @@ const emptyForm = () => ({
   otherCourses: [],  // will hold array of { desc, year, grade }
   tvetaDate: "", tvetaExpiry: "", tvetaRegNo: "",
 });
-
-const recordToForm = (r) => {
-  if (!r) return emptyForm();
-  let parsedCourses = [];
-  if (r.other_courses) {
-    try {
-      parsedCourses = typeof r.other_courses === "string" ? JSON.parse(r.other_courses) : r.other_courses;
-    } catch (e) {
-      parsedCourses = [];
-    }
-  }
-  return {
-    fullName: r.full_name || "",
-    email: r.email || "",
-    gender: r.gender || "",
-    nationalId: r.national_id || "",
-    dobDay: r.dob_day || "",
-    dobMonth: r.dob_month || "",
-    dobYear: r.dob_year || "",
-    jobGroup: r.job_group || "",
-    disability: r.disability || "",
-    disabilityNature: r.disability_nature || "",
-    appointmentDay: r.appointment_day || "",
-    appointmentMonth: r.appointment_month || "",
-    appointmentYear: r.appointment_year || "",
-    retirementDay: r.retirement_day || "",
-    retirementMonth: r.retirement_month || "",
-    retirementYear: r.retirement_year || "",
-    designation: r.designation || "",
-    department: r.department || "",
-    dutiesRoles: r.duties_roles || "",
-    responsibilities: r.responsibilities || "",
-    personalNumber: r.personal_number || "",
-    kcseYear: r.kcse_year || "",
-    kcseGrade: r.kcse_grade || "",
-    certName: r.cert_name || "",
-    certYear: r.cert_year || "",
-    certGrade: r.cert_grade || "",
-    diplomaName: r.diploma_name || "",
-    diplomaYear: r.diploma_year || "",
-    diplomaGrade: r.diploma_grade || "",
-    hdipName: r.hdip_name || "",
-    hdipYear: r.hdip_year || "",
-    hdipGrade: r.hdip_grade || "",
-    degreeName: r.degree_name || "",
-    degreeYear: r.degree_year || "",
-    degreeGrade: r.degree_grade || "",
-    mastersName: r.masters_name || "",
-    mastersYear: r.masters_year || "",
-    mastersGrade: r.masters_grade || "",
-    phdName: r.phd_name || "",
-    phdYear: r.phd_year || "",
-    phdGrade: r.phd_grade || "",
-    pedagogyYear: r.pedagogy_year || "",
-    pedagogyGrade: r.pedagogy_grade || "",
-    totYear: r.tot_year || "",
-    totGrade: r.tot_grade || "",
-    supervYear: r.superv_year || "",
-    supervGrade: r.superv_grade || "",
-    seniorMgmtYear: r.senior_mgmt_year || "",
-    seniorMgmtGrade: r.senior_mgmt_grade || "",
-    sldpYear: r.sldp_year || "",
-    sldpGrade: r.sldp_grade || "",
-    retireCourseYear: r.retire_course_year || "",
-    retireCourseGrade: r.retire_course_grade || "",
-    otherCourses: Array.isArray(parsedCourses) ? parsedCourses : [],
-    tvetaDate: r.tveta_date || "",
-    tvetaExpiry: r.tveta_expiry || "",
-    tvetaRegNo: r.tveta_reg_no || "",
-  };
-};
-
-const maskName = (name) => {
-  if (!name) return "xxxxx";
-  return name
-    .trim()
-    .split(/\s+/)
-    .map(part => {
-      if (part.length <= 1) return "X";
-      return part[0] + "X".repeat(Math.max(part.length - 1, 3));
-    })
-    .join(" ");
-};
-
-const maskID = (id) => {
-  if (!id) return "xxxxx";
-  const str = String(id).trim();
-  if (str.length <= 4) return "xxxxx";
-  return str.slice(0, 2) + "X".repeat(Math.max(str.length - 4, 4)) + str.slice(-2);
-};
-
-const maskEmail = (email) => {
-  if (!email || !email.includes("@")) return "xxxxx@xxxxx.com";
-  const [user, domain] = email.split("@");
-  const maskedUser = user.length <= 2 ? user[0] + "xxxx" : user.slice(0, 2) + "x".repeat(Math.max(user.length - 2, 4));
-  const domainParts = domain.split(".");
-  const maskedDomainName = domainParts[0].length <= 2 ? domainParts[0][0] + "xxxx" : domainParts[0].slice(0, 2) + "X".repeat(Math.max(domainParts[0].length - 2, 4));
-  const ext = domainParts.slice(1).join(".") || "com";
-  return `${maskedUser}@${maskedDomainName}.${ext}`;
-};
-
-const maskText = (text) => {
-  if (!text) return "xxxxx";
-  const str = String(text).trim();
-  if (str.length <= 4) return "xxxx";
-  return str.slice(0, 3) + "X".repeat(Math.min(str.length - 3, 6));
-};
-
-const sendOtpEmail = async (email, otp, fullName) => {
-  try {
-    const res = await fetch("/api/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, fullName }),
-    });
-    return await res.json();
-  } catch (err) {
-    console.error("Error sending OTP email:", err);
-    return { success: true, warning: err.message };
-  }
-};
 
 function DateFields({ prefix, label, form, onChange, required }) {
   const dateValue = formatDateString(form[prefix + "Day"], form[prefix + "Month"], form[prefix + "Year"]);
@@ -685,7 +559,7 @@ function CustomAlertModal({ isOpen, onClose, onConfirm, title, message, type = "
   );
 }
 
-function DataForm({ initialRecord, onClearInitialRecord }) {
+function DataForm() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(emptyForm());
   const [errors, setErrors] = useState({});
@@ -694,150 +568,9 @@ function DataForm({ initialRecord, onClearInitialRecord }) {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSubmission, setPendingSubmission] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [duplicateFound, setDuplicateFound] = useState(null);
-
-  // 2FA OTP state for Duplicate Record Update
-  const [dupOtpStep, setDupOtpStep] = useState(false);
-  const [dupOtpCode, setDupOtpCode] = useState("");
-  const [dupInputOtp, setDupInputOtp] = useState("");
-  const [dupOtpTimer, setDupOtpTimer] = useState(60);
-  const [dupOtpError, setDupOtpError] = useState("");
-  const [dupOtpSending, setDupOtpSending] = useState(false);
-
-  useEffect(() => {
-    let timer;
-    if (dupOtpStep && dupOtpTimer > 0) {
-      timer = setInterval(() => {
-        setDupOtpTimer(c => c - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [dupOtpStep, dupOtpTimer]);
-
-  const handleStartDup2FA = async () => {
-    const rec = duplicateFound?.record;
-    if (!rec) return;
-    if (!rec.email) {
-      setForm(recordToForm(rec));
-      setPendingSubmission(rec);
-      setIsEditing(true);
-      setDuplicateFound(null);
-      setStep(0);
-      return;
-    }
-
-    setDupOtpSending(true);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setDupOtpCode(otp);
-    await sendOtpEmail(rec.email, otp, rec.full_name);
-    setDupOtpTimer(60);
-    setDupOtpStep(true);
-    setDupOtpSending(false);
-    setDupOtpError("");
-  };
-
-  const handleVerifyDupOtp = () => {
-    if (dupInputOtp.trim() === dupOtpCode.trim()) {
-      const rec = duplicateFound.record;
-      setForm(recordToForm(rec));
-      setPendingSubmission(rec);
-      setIsEditing(true);
-      setDuplicateFound(null);
-      setDupOtpStep(false);
-      setDupInputOtp("");
-      setDupOtpError("");
-      setStep(0);
-    } else {
-      setDupOtpError("Invalid verification code. Please check your email and try again.");
-    }
-  };
-
-  const handleResendDupOtp = async () => {
-    if (dupOtpTimer > 0 || dupOtpSending || !duplicateFound?.record) return;
-    setDupOtpSending(true);
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setDupOtpCode(newOtp);
-    await sendOtpEmail(duplicateFound.record.email, newOtp, duplicateFound.record.full_name);
-    setDupOtpTimer(60);
-    setDupOtpSending(false);
-    setDupOtpError("");
-  };
-
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const inp = k => ({ value: form[k] || "", onChange: e => set(k, e.target.value) });
   const isPartTime = ["Part Time Lecturer", "Intern", "Teaching Practice"].includes(form.designation);
-
-  useEffect(() => {
-    if (initialRecord) {
-      setForm(recordToForm(initialRecord));
-      setPendingSubmission(initialRecord);
-      setIsEditing(true);
-      setStep(0);
-      setSubmitted(false);
-    }
-  }, [initialRecord]);
-
-  const handleCancelUpdate = () => {
-    setForm(emptyForm());
-    setPendingSubmission(null);
-    setIsEditing(false);
-    setStep(0);
-    if (onClearInitialRecord) onClearInitialRecord();
-  };
-
-  // Real-time live duplicate check during new record entry (National ID & Email Address only)
-  useEffect(() => {
-    if (isEditing || submitted) {
-      setDuplicateFound(null);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      const trimmedId = form.nationalId?.trim();
-      const trimmedEmail = form.email?.trim();
-
-      let foundRecord = null;
-      let matchedField = "";
-      let matchedValue = "";
-
-      // 1. Check National ID
-      if (trimmedId && trimmedId.length >= 4) {
-        const { data } = await supabase
-          .from("staff_submissions")
-          .select("*")
-          .eq("national_id", trimmedId)
-          .maybeSingle();
-        if (data) {
-          foundRecord = data;
-          matchedField = "National ID";
-          matchedValue = trimmedId;
-        }
-      }
-
-      // 2. Check Email Address
-      if (!foundRecord && trimmedEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-        const { data } = await supabase
-          .from("staff_submissions")
-          .select("*")
-          .eq("email", trimmedEmail)
-          .maybeSingle();
-        if (data) {
-          foundRecord = data;
-          matchedField = "Email Address";
-          matchedValue = trimmedEmail;
-        }
-      }
-
-      if (foundRecord) {
-        setDuplicateFound({ field: matchedField, value: matchedValue, record: foundRecord });
-      } else {
-        setDuplicateFound(null);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [form.nationalId, form.email, isEditing, submitted]);
 
   const fieldMsg = (key) => {
     if (!errors[key] && !successes[key]) return null;
@@ -1067,11 +800,6 @@ function DataForm({ initialRecord, onClearInitialRecord }) {
       if (form.tvetaExpiry && !e.tvetaExpiry) s.tvetaExpiry = "Looks good";
     }
 
-    if (duplicateFound && !isEditing) {
-      if (duplicateFound.field === "National ID") e.nationalId = `Record already exists with National ID: ${duplicateFound.value}`;
-      if (duplicateFound.field === "Email Address") e.email = `Record already exists with Email: ${duplicateFound.value}`;
-    }
-
     setSuccesses(s);
 
     setErrors(e);
@@ -1169,12 +897,10 @@ function DataForm({ initialRecord, onClearInitialRecord }) {
 
     let error;
     if (pendingSubmission) {
-      const matchKey = pendingSubmission.id ? "id" : "national_id";
-      const matchVal = pendingSubmission.id || pendingSubmission.national_id || form.nationalId;
       const { error: updateError } = await supabase
         .from("staff_submissions")
         .update(dbRecord)
-        .eq(matchKey, matchVal);
+        .eq("national_id", form.nationalId);
       error = updateError;
     } else {
       const { error: insertError } = await supabase
@@ -1192,32 +918,28 @@ function DataForm({ initialRecord, onClearInitialRecord }) {
     }
 
     setSubmitted(true);
+    setPendingSubmission(null);
   };
 
   if (submitted) return (
-    <div className="container no-print">
+    <div className="container">
       <div className="card" style={{ textAlign: "center", padding: "2.5rem 1.5rem" }}>
         <div style={{ marginBottom: "1rem", color: C.success }}>
           <FaRegCheckCircle size={52} />
         </div>
-        <h2 style={{ fontFamily: "sans-serif", color: C.success, marginBottom: 6 }}>
-          {isEditing ? "Record Updated Successfully" : "Submission Received"}
-        </h2>
+        <h2 style={{ fontFamily: "sans-serif", color: C.success, marginBottom: 6 }}>Submission Received</h2>
         <p style={{ fontFamily: "sans-serif", color: C.muted, marginBottom: "1.5rem" }}>
-          {isEditing
-            ? <>Your record for <strong>{form.fullName}</strong> has been updated in the database.</>
-            : <>Thank you, <strong>{form.fullName}</strong>. Your data has been recorded successfully.</>
-          }
+          Thank you, <strong>{form.fullName}</strong>. Your data has been recorded successfully.
         </p>
-        <button className="btn" onClick={() => { setForm(emptyForm()); setStep(0); setIsEditing(false); setPendingSubmission(null); setSubmitted(false); if (onClearInitialRecord) onClearInitialRecord(); }}>
-          {isEditing ? "Submit / Edit Another Response" : "Submit Another Response"}
+        <button className="btn" onClick={() => { setForm(emptyForm()); setStep(0); setSubmitted(false); }}>
+          Submit Another Response
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="container no-print">
+    <div className="container">
       <CustomAlertModal
         isOpen={showConfirmModal}
         onClose={() => { setShowConfirmModal(false); setPendingSubmission(null); }}
@@ -1226,171 +948,6 @@ function DataForm({ initialRecord, onClearInitialRecord }) {
         message={`A submission with National ID "${form.nationalId}" already exists. This will UPDATE your previous submission. Do you want to continue?`}
         type="warning"
       />
-
-      {/* Real-time Live Duplicate Notification Popup */}
-      {duplicateFound && !isEditing && (
-        <div className="overlay" style={{ zIndex: 300 }} onClick={() => {}}>
-          <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
-            <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
-              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#FEF3C7", display: "inline-flex", alignItems: "center", justifyContent: "center", color: C.warning, marginBottom: "0.875rem" }}>
-                <FaExclamationTriangle size={32} />
-              </div>
-              <h3 style={{ fontFamily: "sans-serif", color: C.primary, fontSize: "1.3rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-                Existing Record Found
-              </h3>
-              <p style={{ fontFamily: "sans-serif", fontSize: "0.875rem", color: C.text, lineHeight: 1.5 }}>
-                A staff record with this <strong>{duplicateFound.field}</strong> (<em>"{duplicateFound.value}"</em>) already exists in the system.
-              </p>
-            </div>
-
-            <div style={{ background: C.light, borderRadius: 10, padding: "1rem 1.25rem", marginBottom: "1.25rem", fontSize: "0.82rem", color: C.text, lineHeight: 1.7, border: `1px solid ${C.border}` }}>
-              <div style={{ fontWeight: 600, color: C.primary, marginBottom: 4, borderBottom: `1px solid ${C.border}`, paddingBottom: 4, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span>Existing Record Details:</span>
-                <span className="badge" style={{ fontSize: "0.65rem", background: "#FEF3C7", color: "#92400E" }}><FaLock size={9} /> Protected (Masked)</span>
-              </div>
-              <div><strong>Full Name:</strong> {maskName(duplicateFound.record.full_name)}</div>
-              <div><strong>National ID:</strong> {maskID(duplicateFound.record.national_id)}</div>
-              {duplicateFound.record.email && <div><strong>Email:</strong> {maskEmail(duplicateFound.record.email)}</div>}
-              {duplicateFound.record.department && <div><strong>Department:</strong> {maskText(duplicateFound.record.department)}</div>}
-              {duplicateFound.record.designation && <div><strong>Designation:</strong> {maskText(duplicateFound.record.designation)}</div>}
-            </div>
-
-            <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "0.75rem 1rem", marginBottom: "1.25rem", display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <FaInfoCircle size={14} style={{ color: C.warning, flexShrink: 0, marginTop: 2 }} />
-              <span style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: "#92400E", lineHeight: 1.5 }}>
-                New transaction recording has been stopped for this duplicate entry. We recommend updating the existing record instead.
-              </span>
-            </div>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                className="btn-outline"
-                style={{ flex: 1, justifyContent: "center" }}
-                onClick={() => {
-                  if (duplicateFound.field === "National ID") set("nationalId", "");
-                  else if (duplicateFound.field === "Email Address") set("email", "");
-                  setDuplicateFound(null);
-                }}
-              >
-                <FaTimes size={11} /> Clear Field & Edit
-              </button>
-              <button
-                className="btn-accent"
-                style={{ flex: 1, justifyContent: "center", fontWeight: 700 }}
-                onClick={handleStartDup2FA}
-                disabled={dupOtpSending}
-              >
-                {dupOtpSending
-                  ? <><FaSpinner className="spin" size={12} /> Sending OTP...</>
-                  : <><FaShieldAlt size={12} /> Update Existing Record (2FA)</>
-                }
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 2FA OTP Verification Modal for Duplicate Record Update */}
-      {dupOtpStep && duplicateFound && (
-        <div className="overlay" style={{ zIndex: 400 }} onClick={() => {}}>
-          <div className="modal" style={{ maxWidth: 460 }} onClick={e => e.stopPropagation()}>
-            <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
-              <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.light, display: "inline-flex", alignItems: "center", justifyContent: "center", color: C.primary, marginBottom: "0.75rem" }}>
-                <FaLock size={26} />
-              </div>
-              <h3 style={{ fontFamily: "sans-serif", color: C.primary, fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-                2-Factor Authentication Required
-              </h3>
-              <p style={{ fontFamily: "sans-serif", fontSize: "0.82rem", color: C.text, lineHeight: 1.5 }}>
-                To protect user privacy, a 6-digit verification code has been sent to the registered email:
-                <br />
-                <strong style={{ color: C.primary }}>{maskEmail(duplicateFound.record.email)}</strong>
-              </p>
-            </div>
-
-            <div className="field" style={{ marginBottom: "1rem" }}>
-              <label className="label"><FaKey size={11} /> Enter 6-Digit OTP Code</label>
-              <input
-                type="text"
-                maxLength={6}
-                value={dupInputOtp}
-                onChange={e => { setDupInputOtp(e.target.value.replace(/\D/g, "")); setDupOtpError(""); }}
-                placeholder="e.g. 584920"
-                style={{ textAlign: "center", letterSpacing: "4px", fontSize: "1.2rem", fontWeight: 700, borderColor: dupOtpError ? C.danger : C.border }}
-                autoFocus
-              />
-              {dupOtpError && (
-                <span style={{ color: C.danger, fontSize: "0.72rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 4, justifyContent: "center" }}>
-                  <FaExclamationTriangle size={10} /> {dupOtpError}
-                </span>
-              )}
-            </div>
-
-            <button
-              className="btn-accent"
-              style={{ width: "100%", justifyContent: "center", marginBottom: "1rem", fontWeight: 700 }}
-              onClick={handleVerifyDupOtp}
-              disabled={dupInputOtp.length !== 6}
-            >
-              <FaRegCheckCircle size={14} /> Verify OTP & Access Record
-            </button>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <button
-                className="btn-outline"
-                style={{ fontSize: "0.75rem", padding: "4px 10px" }}
-                onClick={() => { setDupOtpStep(false); setDupInputOtp(""); setDupOtpError(""); }}
-              >
-                Back
-              </button>
-
-              <button
-                className="btn-ghost"
-                style={{ color: dupOtpTimer > 0 ? C.muted : C.primary, fontSize: "0.75rem", borderColor: dupOtpTimer > 0 ? C.border : C.primary }}
-                disabled={dupOtpTimer > 0 || dupOtpSending}
-                onClick={handleResendDupOtp}
-              >
-                {dupOtpSending
-                  ? <><FaSpinner className="spin" size={11} /> Sending...</>
-                  : dupOtpTimer > 0
-                    ? <><FaClock size={11} /> Resend OTP in {dupOtpTimer}s</>
-                    : <><FaRedo size={11} /> Resend OTP</>
-                }
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Editing Mode Banner */}
-      {isEditing && (
-        <div style={{
-          background: "#EFF6FF", border: "1px solid #93C5FD", borderRadius: 10,
-          padding: "1rem 1.25rem", marginBottom: "1.5rem", display: "flex",
-          alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#DBEAFE", display: "flex", alignItems: "center", justifyContent: "center", color: C.info, flexShrink: 0 }}>
-              <FaEdit size={18} />
-            </div>
-            <div>
-              <div style={{ fontFamily: "sans-serif", fontSize: "0.9rem", fontWeight: 700, color: "#1E40AF" }}>
-                Updating Existing Record
-              </div>
-              <div style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: "#1E3A8A" }}>
-                Editing record for <strong>{form.fullName}</strong> (National ID: <strong>{form.nationalId}</strong>). Make your changes across all steps and click <strong>Save Changes</strong> at the end.
-              </div>
-            </div>
-          </div>
-          <button
-            className="btn-outline"
-            style={{ fontSize: "0.75rem", padding: "0.4rem 0.75rem", color: C.danger, borderColor: C.danger }}
-            onClick={handleCancelUpdate}
-          >
-            Cancel & Start New Form
-          </button>
-        </div>
-      )}
 
       <div className="card">
         <div style={{ marginBottom: "1.25rem" }}>
@@ -1842,10 +1399,7 @@ function DataForm({ initialRecord, onClearInitialRecord }) {
           {step < 4
             ? <button className="btn" onClick={next}>Continue <FaArrowRight size={12} /></button>
             : <button className="btn-accent" onClick={checkExistingAndSubmit} disabled={submitting}>
-              {submitting
-                ? (isEditing ? "Updating..." : "Submitting...")
-                : (isEditing ? <><FaSave size={12} /> Update Records</> : <><FaCheck size={12} /> Submit Records</>)
-              }
+              {submitting ? "Submitting..." : <><FaCheck size={12} /> Submit Form</>}
             </button>
           }
         </div>
@@ -2479,7 +2033,7 @@ const saveEdit = async () => {
         {/* Print area — all records */}
           {printingAll && (
             <div className="print-only">
-              {filtered.map((r, index) => (
+              {paginated.map((r, index) => (
                 <div key={r.id} style={{ pageBreakAfter: index < filtered.length - 1 ? "always" : "auto" }}>
                   <PrintRecord r={r} />
                 </div>
@@ -3383,200 +2937,9 @@ export default function App() {
     } catch { return null; }
   });
 
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [downloadQuery, setDownloadQuery]         = useState("");
-  const [downloadResult, setDownloadResult]       = useState(null);
-  const [downloadSearching, setDownloadSearching] = useState(false);
-  const [downloadError, setDownloadError]         = useState("");
-  const [downloadPrinting, setDownloadPrinting]   = useState(false);
-
-  // Download Modal 2FA State
-  const [downloadOtpStep, setDownloadOtpStep]       = useState(false);
-  const [downloadOtpCode, setDownloadOtpCode]       = useState("");
-  const [downloadInputOtp, setDownloadInputOtp]     = useState("");
-  const [downloadOtpTimer, setDownloadOtpTimer]     = useState(60);
-  const [downloadOtpError, setDownloadOtpError]     = useState("");
-  const [downloadOtpSending, setDownloadOtpSending] = useState(false);
-  const [downloadTargetRecord, setDownloadTargetRecord] = useState(null);
-
-  // Update Modal State & 2FA State
-  const [showUpdateModal, setShowUpdateModal]     = useState(false);
-  const [updateQuery, setUpdateQuery]             = useState("");
-  const [updateSearching, setUpdateSearching]     = useState(false);
-  const [updateError, setUpdateError]             = useState("");
-  const [initialRecord, setInitialRecord]         = useState(null);
-  const [updateOtpStep, setUpdateOtpStep]         = useState(false);
-  const [updateOtpCode, setUpdateOtpCode]         = useState("");
-  const [updateInputOtp, setUpdateInputOtp]       = useState("");
-  const [updateOtpTimer, setUpdateOtpTimer]       = useState(60);
-  const [updateOtpError, setUpdateOtpError]       = useState("");
-  const [updateOtpSending, setUpdateOtpSending]   = useState(false);
-  const [updateTargetRecord, setUpdateTargetRecord] = useState(null);
-
-  useEffect(() => {
-    let timer;
-    if (downloadOtpStep && downloadOtpTimer > 0) {
-      timer = setInterval(() => {
-        setDownloadOtpTimer(c => c - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [downloadOtpStep, downloadOtpTimer]);
-
-  useEffect(() => {
-    let timer;
-    if (updateOtpStep && updateOtpTimer > 0) {
-      timer = setInterval(() => {
-        setUpdateOtpTimer(c => c - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [updateOtpStep, updateOtpTimer]);
-
-  const handleDownloadSearch = async () => {
-    if (!downloadQuery.trim()) return;
-    setDownloadSearching(true);
-    setDownloadError("");
-    try {
-      const { data, error } = await supabase
-        .from("staff_submissions")
-        .select("*")
-        .eq("national_id", downloadQuery.trim())
-        .maybeSingle();
-
-      if (error || !data) {
-        setDownloadError("No record found for this National ID. Please check and try again.");
-        setDownloadResult(null);
-      } else {
-        setDownloadTargetRecord(data);
-        if (!data.email) {
-          setDownloadResult(data);
-          return;
-        }
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        setDownloadOtpCode(otp);
-        await sendOtpEmail(data.email, otp, data.full_name);
-        setDownloadOtpTimer(60);
-        setDownloadOtpStep(true);
-      }
-    } catch (err) {
-      setDownloadError("An error occurred. Please try again.");
-    } finally {
-      setDownloadSearching(false);
-    }
-  };
-
-  const handleVerifyDownloadOtp = () => {
-    if (downloadInputOtp.trim() === downloadOtpCode.trim()) {
-      setDownloadResult(downloadTargetRecord);
-      setDownloadOtpStep(false);
-      setDownloadInputOtp("");
-      setDownloadOtpError("");
-    } else {
-      setDownloadOtpError("Invalid verification code. Please check your email and try again.");
-    }
-  };
-
-  const handleResendDownloadOtp = async () => {
-    if (downloadOtpTimer > 0 || downloadOtpSending || !downloadTargetRecord) return;
-    setDownloadOtpSending(true);
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setDownloadOtpCode(newOtp);
-    await sendOtpEmail(downloadTargetRecord.email, newOtp, downloadTargetRecord.full_name);
-    setDownloadOtpTimer(60);
-    setDownloadOtpSending(false);
-    setDownloadOtpError("");
-  };
-
-  const closeDownloadModal = () => {
-    setShowDownloadModal(false);
-    setDownloadQuery("");
-    setDownloadResult(null);
-    setDownloadError("");
-    setDownloadPrinting(false);
-    setDownloadOtpStep(false);
-    setDownloadInputOtp("");
-    setDownloadOtpError("");
-    setDownloadTargetRecord(null);
-  };
-
-  const handleUpdateSearch = async () => {
-    if (!updateQuery.trim()) return;
-    setUpdateSearching(true);
-    setUpdateError("");
-    try {
-      const { data, error } = await supabase
-        .from("staff_submissions")
-        .select("*")
-        .eq("national_id", updateQuery.trim())
-        .maybeSingle();
-
-      if (error || !data) {
-        setUpdateError("No record found for this National ID. Please check your ID and try again.");
-      } else {
-        setUpdateTargetRecord(data);
-        if (!data.email) {
-          setInitialRecord(data);
-          closeUpdateModal();
-          setScreen("form");
-          return;
-        }
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        setUpdateOtpCode(otp);
-        await sendOtpEmail(data.email, otp, data.full_name);
-        setUpdateOtpTimer(60);
-        setUpdateOtpStep(true);
-      }
-    } catch (err) {
-      setUpdateError("An error occurred while searching. Please try again.");
-    } finally {
-      setUpdateSearching(false);
-    }
-  };
-
-  const handleVerifyUpdateOtp = () => {
-    if (updateInputOtp.trim() === updateOtpCode.trim()) {
-      setInitialRecord(updateTargetRecord);
-      closeUpdateModal();
-      setScreen("form");
-    } else {
-      setUpdateOtpError("Invalid verification code. Please check your email and try again.");
-    }
-  };
-
-  const handleResendUpdateOtp = async () => {
-    if (updateOtpTimer > 0 || updateOtpSending || !updateTargetRecord) return;
-    setUpdateOtpSending(true);
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setUpdateOtpCode(newOtp);
-    await sendOtpEmail(updateTargetRecord.email, newOtp, updateTargetRecord.full_name);
-    setUpdateOtpTimer(60);
-    setUpdateOtpSending(false);
-    setUpdateOtpError("");
-  };
-
-  const closeUpdateModal = () => {
-    setShowUpdateModal(false);
-    setUpdateQuery("");
-    setUpdateError("");
-    setUpdateSearching(false);
-    setUpdateOtpStep(false);
-    setUpdateInputOtp("");
-    setUpdateOtpError("");
-    setUpdateTargetRecord(null);
-  };  
-
   return (
     <div className="app">
       <style>{css}</style>
-
-      {/* Print area for user self-download */}
-      {downloadPrinting && downloadResult && (
-        <div className="print-only">
-          <PrintRecord r={downloadResult} />
-        </div>
-      )}
-
       <header className="header no-print">
         <div className="header-inner">
           <div className="header-logo">
@@ -3587,30 +2950,16 @@ export default function App() {
             </div>
           </div>
           <div className="header-actions">
-            {screen !== "form" && (
-              <button className="btn-ghost" onClick={() => setScreen("form")}>
-                <FaClipboardList size={12} /> Form
-              </button>
-            )}
-            {screen === "form" && <>
-              <button className="btn-ghost" onClick={() => setShowUpdateModal(true)}>
-                <FaEdit size={12} /> Update Records
-              </button>
-              <button className="btn-ghost" onClick={() => setShowDownloadModal(true)}>
-                <FaFileDownload size={12} /> Download My Data
-              </button>
-              <button className="btn-ghost" onClick={() => setScreen(admin ? "dashboard" : "login")}>
-                <FaUserShield size={12} /> Admin
-              </button>
-            </>}
-            {screen === "login"     && <span className="badge-accent"><FaLock size={10} /> Login</span>}
+            {screen !== "form" && <button className="btn-ghost" onClick={() => setScreen("form")}><FaClipboardList size={12} /> Form</button>}
+            {screen === "form" && <button className="btn-ghost" onClick={() => setScreen(admin ? "dashboard" : "login")}><FaUserShield size={12} /> Admin</button>}
+            {screen === "login" && <span className="badge-accent"><FaLock size={10} /> Login</span>}
             {screen === "dashboard" && <span className="badge-accent"><FaUserShield size={10} /> {admin?.role}</span>}
           </div>
         </div>
       </header>
+      {screen === "form" && <DataForm />}
 
-      {screen === "form"      && <DataForm initialRecord={initialRecord} onClearInitialRecord={() => setInitialRecord(null)} />}
-      {screen === "login"     && <Login onLogin={u => {
+      {screen === "login" && <Login onLogin={u => {
         sessionStorage.setItem("nysei_admin", JSON.stringify(u));
         setAdmin(u);
         setScreen("dashboard");
@@ -3620,336 +2969,6 @@ export default function App() {
         setAdmin(null);
         setScreen("form");
       }} />}
-
-      {/* Download My Data Modal */}
-      {showDownloadModal && (
-        <div className="overlay" style={{ zIndex: 200 }} onClick={closeDownloadModal}>
-          <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-
-            {/* Modal header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: `2px solid ${C.accent}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 40, height: 40, borderRadius: "50%", background: C.light, display: "flex", alignItems: "center", justifyContent: "center", color: C.primary, fontSize: "1.1rem" }}>
-                  <FaFileDownload />
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: "sans-serif", color: C.primary, marginBottom: 2 }}>
-                    Download My Data
-                  </h3>
-                  <p style={{ fontFamily: "sans-serif", fontSize: "0.72rem", color: C.muted }}>
-                    Enter your National ID to retrieve your record
-                  </p>
-                </div>
-              </div>
-              <button className="btn-icon" onClick={closeDownloadModal}>
-                <FaTimes size={16} />
-              </button>
-            </div>
-
-            {/* Step 1: Search by National ID */}
-            {!downloadOtpStep && !downloadResult && <>
-              <div className="field" style={{ marginBottom: "1rem" }}>
-                <label className="label"><FaIdCard size={11} /> National ID Number</label>
-                <input
-                  value={downloadQuery}
-                  onChange={e => { setDownloadQuery(e.target.value); setDownloadError(""); }}
-                  placeholder="Enter your National ID e.g. 12345678"
-                  onKeyDown={e => e.key === "Enter" && handleDownloadSearch()}
-                  style={{ borderColor: downloadError ? C.danger : C.border }}
-                  autoFocus
-                />
-                {downloadError && (
-                  <span style={{ color: C.danger, fontSize: "0.72rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                    <FaExclamationTriangle size={10} /> {downloadError}
-                  </span>
-                )}
-              </div>
-
-              <button
-                className="btn"
-                style={{ width: "100%", justifyContent: "center" }}
-                onClick={handleDownloadSearch}
-                disabled={downloadSearching || !downloadQuery.trim()}
-              >
-                {downloadSearching
-                  ? <><FaSpinner className="spin" size={13} /> Searching & Sending OTP…</>
-                  : <><FaSearch size={12} /> Find My Record</>
-                }
-              </button>
-
-              <div style={{ background: C.light, borderRadius: 8, padding: "0.75rem 1rem", marginTop: "1rem", display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <FaShieldAlt size={13} style={{ color: C.primary, flexShrink: 0, marginTop: 2 }} />
-                <span style={{ fontFamily: "sans-serif", fontSize: "0.75rem", color: C.muted, lineHeight: 1.5 }}>
-                  Protected by 2-Factor Authentication. A 6-digit verification code will be sent to your registered email upon ID match.
-                </span>
-              </div>
-            </>}
-
-            {/* Step 2: 2FA OTP Verification */}
-            {downloadOtpStep && !downloadResult && <>
-              <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.light, display: "inline-flex", alignItems: "center", justifyContent: "center", color: C.primary, marginBottom: "0.6rem" }}>
-                  <FaLock size={22} />
-                </div>
-                <h4 style={{ fontFamily: "sans-serif", color: C.primary, fontSize: "1.05rem", fontWeight: 700, marginBottom: "0.3rem" }}>
-                  2-Factor Authentication
-                </h4>
-                <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.text, lineHeight: 1.5 }}>
-                  We sent a 6-digit code to registered email:
-                  <br />
-                  <strong style={{ color: C.primary }}>{maskEmail(downloadTargetRecord?.email)}</strong>
-                </p>
-              </div>
-
-              <div className="field" style={{ marginBottom: "1rem" }}>
-                <label className="label"><FaKey size={11} /> Enter 6-Digit OTP Code</label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={downloadInputOtp}
-                  onChange={e => { setDownloadInputOtp(e.target.value.replace(/\D/g, "")); setDownloadOtpError(""); }}
-                  placeholder="e.g. 584920"
-                  style={{ textAlign: "center", letterSpacing: "4px", fontSize: "1.2rem", fontWeight: 700, borderColor: downloadOtpError ? C.danger : C.border }}
-                  autoFocus
-                  onKeyDown={e => e.key === "Enter" && downloadInputOtp.length === 6 && handleVerifyDownloadOtp()}
-                />
-                {downloadOtpError && (
-                  <span style={{ color: C.danger, fontSize: "0.72rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 4, justifyContent: "center" }}>
-                    <FaExclamationTriangle size={10} /> {downloadOtpError}
-                  </span>
-                )}
-              </div>
-
-              <button
-                className="btn-accent"
-                style={{ width: "100%", justifyContent: "center", marginBottom: "1rem", fontWeight: 700 }}
-                onClick={handleVerifyDownloadOtp}
-                disabled={downloadInputOtp.length !== 6}
-              >
-                <FaRegCheckCircle size={14} /> Verify OTP & View Record
-              </button>
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button
-                  className="btn-outline"
-                  style={{ fontSize: "0.75rem", padding: "4px 10px" }}
-                  onClick={() => { setDownloadOtpStep(false); setDownloadInputOtp(""); setDownloadOtpError(""); }}
-                >
-                  Back
-                </button>
-
-                <button
-                  className="btn-ghost"
-                  style={{ color: downloadOtpTimer > 0 ? C.muted : C.primary, fontSize: "0.75rem", borderColor: downloadOtpTimer > 0 ? C.border : C.primary }}
-                  disabled={downloadOtpTimer > 0 || downloadOtpSending}
-                  onClick={handleResendDownloadOtp}
-                >
-                  {downloadOtpSending
-                    ? <><FaSpinner className="spin" size={11} /> Sending...</>
-                    : downloadOtpTimer > 0
-                      ? <><FaClock size={11} /> Resend OTP in {downloadOtpTimer}s</>
-                      : <><FaRedo size={11} /> Resend OTP</>
-                  }
-                </button>
-              </div>
-            </>}
-
-            {/* Result found */}
-            {downloadResult && <>
-              <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 8, padding: "0.875rem 1rem", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: 10 }}>
-                <FaRegCheckCircle size={18} style={{ color: C.success, flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontFamily: "sans-serif", fontSize: "0.85rem", fontWeight: 700, color: C.success }}>
-                    Record Found
-                  </div>
-                  <div style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.muted }}>
-                    {downloadResult.full_name} — {downloadResult.designation}, {downloadResult.department}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "0.75rem 1rem", marginBottom: "1.25rem", display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <FaExclamationTriangle size={13} style={{ color: C.warning, flexShrink: 0, marginTop: 2 }} />
-                <span style={{ fontFamily: "sans-serif", fontSize: "0.75rem", color: "#92400E", lineHeight: 1.5 }}>
-                  This document contains your personal data. Keep it confidential and do not share with unauthorised persons.
-                </span>
-              </div>
-
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button
-                  className="btn-outline"
-                  style={{ flex: 1, justifyContent: "center" }}
-                  onClick={() => {
-                    setDownloadResult(null);
-                    setDownloadQuery("");
-                    setDownloadError("");
-                  }}
-                >
-                  <FaSearch size={11} /> Search Again
-                </button>
-                <button
-                className="btn-accent"
-                style={{ flex: 1, justifyContent: "center" }}
-                onClick={() => {
-                  setDownloadPrinting(true);
-                  setShowDownloadModal(false); 
-                  setTimeout(() => {
-                    const originalTitle = document.title;
-                    document.title = `${downloadResult.full_name} — NYSEI Staff Record`;
-                    window.print();
-                    setTimeout(() => {
-                      document.title = originalTitle;
-                      setDownloadPrinting(false);
-                      setShowDownloadModal(false);
-                    }, 1500);
-                  }, 400); 
-                }}
-              >
-                <FaFileDownload size={12} /> Download My Record
-              </button>
-              </div>
-            </>}
-
-          </div>
-        </div>
-      )}
-
-      {/* Update My Record Modal */}
-      {showUpdateModal && (
-        <div className="overlay" style={{ zIndex: 200 }} onClick={closeUpdateModal}>
-          <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-
-            {/* Modal header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: `2px solid ${C.accent}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 40, height: 40, borderRadius: "50%", background: C.light, display: "flex", alignItems: "center", justifyContent: "center", color: C.primary, fontSize: "1.1rem" }}>
-                  <FaEdit />
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: "sans-serif", color: C.primary, marginBottom: 2 }}>
-                    Update My Record
-                  </h3>
-                  <p style={{ fontFamily: "sans-serif", fontSize: "0.72rem", color: C.muted }}>
-                    Enter your National ID to load and edit your records
-                  </p>
-                </div>
-              </div>
-              <button className="btn-icon" onClick={closeUpdateModal}>
-                <FaTimes size={16} />
-              </button>
-            </div>
-
-            {/* Step 1: Search by National ID */}
-            {!updateOtpStep && <>
-              <div className="field" style={{ marginBottom: "1rem" }}>
-                <label className="label"><FaIdCard size={11} /> National ID Number</label>
-                <input
-                  value={updateQuery}
-                  onChange={e => { setUpdateQuery(e.target.value); setUpdateError(""); }}
-                  placeholder="Enter your National ID e.g. 12345678"
-                  onKeyDown={e => e.key === "Enter" && handleUpdateSearch()}
-                  style={{ borderColor: updateError ? C.danger : C.border }}
-                  autoFocus
-                />
-                {updateError && (
-                  <span style={{ color: C.danger, fontSize: "0.72rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                    <FaExclamationTriangle size={10} /> {updateError}
-                  </span>
-                )}
-              </div>
-
-              <button
-                className="btn"
-                style={{ width: "100%", justifyContent: "center" }}
-                onClick={handleUpdateSearch}
-                disabled={updateSearching || !updateQuery.trim()}
-              >
-                {updateSearching
-                  ? <><FaSpinner className="spin" size={13} /> Searching & Sending OTP…</>
-                  : <><FaSearch size={12} /> Find & Open My Record</>
-                }
-              </button>
-
-              <div style={{ background: C.light, borderRadius: 8, padding: "0.75rem 1rem", marginTop: "1rem", display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <FaShieldAlt size={13} style={{ color: C.primary, flexShrink: 0, marginTop: 2 }} />
-                <span style={{ fontFamily: "sans-serif", fontSize: "0.75rem", color: C.muted, lineHeight: 1.5 }}>
-                  Protected by 2-Factor Authentication. A 6-digit verification code will be sent to your registered email upon ID match.
-                </span>
-              </div>
-            </>}
-
-            {/* Step 2: 2FA OTP Verification */}
-            {updateOtpStep && <>
-              <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.light, display: "inline-flex", alignItems: "center", justifyContent: "center", color: C.primary, marginBottom: "0.6rem" }}>
-                  <FaLock size={22} />
-                </div>
-                <h4 style={{ fontFamily: "sans-serif", color: C.primary, fontSize: "1.05rem", fontWeight: 700, marginBottom: "0.3rem" }}>
-                  2-Factor Authentication
-                </h4>
-                <p style={{ fontFamily: "sans-serif", fontSize: "0.78rem", color: C.text, lineHeight: 1.5 }}>
-                  We sent a 6-digit code to registered email:
-                  <br />
-                  <strong style={{ color: C.primary }}>{maskEmail(updateTargetRecord?.email)}</strong>
-                </p>
-              </div>
-
-              <div className="field" style={{ marginBottom: "1rem" }}>
-                <label className="label"><FaKey size={11} /> Enter 6-Digit OTP Code</label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={updateInputOtp}
-                  onChange={e => { setUpdateInputOtp(e.target.value.replace(/\D/g, "")); setUpdateOtpError(""); }}
-                  placeholder="e.g. 584920"
-                  style={{ textAlign: "center", letterSpacing: "4px", fontSize: "1.2rem", fontWeight: 700, borderColor: updateOtpError ? C.danger : C.border }}
-                  autoFocus
-                  onKeyDown={e => e.key === "Enter" && updateInputOtp.length === 6 && handleVerifyUpdateOtp()}
-                />
-                {updateOtpError && (
-                  <span style={{ color: C.danger, fontSize: "0.72rem", fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 4, justifyContent: "center" }}>
-                    <FaExclamationTriangle size={10} /> {updateOtpError}
-                  </span>
-                )}
-              </div>
-
-              <button
-                className="btn-accent"
-                style={{ width: "100%", justifyContent: "center", marginBottom: "1rem", fontWeight: 700 }}
-                onClick={handleVerifyUpdateOtp}
-                disabled={updateInputOtp.length !== 6}
-              >
-                <FaRegCheckCircle size={14} /> Verify OTP & Edit Record
-              </button>
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button
-                  className="btn-outline"
-                  style={{ fontSize: "0.75rem", padding: "4px 10px" }}
-                  onClick={() => { setUpdateOtpStep(false); setUpdateInputOtp(""); setUpdateOtpError(""); }}
-                >
-                  Back
-                </button>
-
-                <button
-                  className="btn-ghost"
-                  style={{ color: updateOtpTimer > 0 ? C.muted : C.primary, fontSize: "0.75rem", borderColor: updateOtpTimer > 0 ? C.border : C.primary }}
-                  disabled={updateOtpTimer > 0 || updateOtpSending}
-                  onClick={handleResendUpdateOtp}
-                >
-                  {updateOtpSending
-                    ? <><FaSpinner className="spin" size={11} /> Sending...</>
-                    : updateOtpTimer > 0
-                      ? <><FaClock size={11} /> Resend OTP in {updateOtpTimer}s</>
-                      : <><FaRedo size={11} /> Resend OTP</>
-                  }
-                </button>
-              </div>
-            </>}
-
-          </div>
-        </div>
-      )}
     </div>
   );
 }
